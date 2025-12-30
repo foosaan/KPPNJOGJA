@@ -17,7 +17,9 @@ class Vera extends Model
         'file_path',
         'status',
         'staff_id',
-        'alasan_penolakan'
+        'alasan_penolakan',
+        'feedback',
+        'feedback_file'
     ];
 
     public function staff()

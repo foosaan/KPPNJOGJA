@@ -12,6 +12,7 @@ use App\Http\Controllers\VeraController;
 use App\Http\Controllers\MskiController;
 use App\Http\Controllers\PdController;
 use App\Http\Controllers\BankController;
+use App\Http\Controllers\UmumController;
 use App\Http\Controllers\KelolaLayananController;
 
 // ==================== HALAMAN AWAL ====================
@@ -93,6 +94,7 @@ Route::middleware('auth')->group(function () {
         Route::post('layanan/{layanan}/toggle', [KelolaLayananController::class, 'toggleStatus'])
             ->name('layanan.toggle');
 
+
         // CRUD User (role: user)
         Route::get('/admin/users', [AdminUserController::class, 'indexUser'])->name('admin.users.index');
         Route::get('/admin/users/create', [AdminUserController::class, 'createUser'])->name('admin.users.create');
@@ -110,6 +112,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/staff/berkasselesai', [StaffController::class, 'berkasSelesai'])->name('staff.berkasselesai');
         Route::get('/staff/berkasditolak', [StaffController::class, 'berkasDitolak'])->name('staff.berkasditolak');
         Route::put('/staff/update-status/{id}/{type}', [StaffController::class, 'updateStatus'])->name('staff.updateStatus');
+
+        // 👉 TARUH DI SINI
+        Route::put('/staff/feedback/{id}', [StaffController::class, 'updateFeedback'])
+            ->name('staff.feedback.update');
     });
 
     // ==================== USER ====================
@@ -131,6 +137,10 @@ Route::middleware('auth')->group(function () {
         // Layanan Bank
         Route::get('/user/layanan-bank/create', [BankController::class, 'create'])->name('bank.create');
         Route::post('/user/layanan-bank', [BankController::class, 'store'])->name('bank.store');
+
+        // Layanan Umum
+        Route::get('/user/layanan-umum/create', [UmumController::class, 'create'])->name('umum.create');
+        Route::post('/user/layanan-umum', [UmumController::class, 'store'])->name('umum.store');
     });
 
     // ==================== LOGOUT ====================

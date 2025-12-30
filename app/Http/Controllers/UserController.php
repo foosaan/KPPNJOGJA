@@ -8,6 +8,7 @@ use App\Models\Vera;
 use App\Models\LayananPd;
 use App\Models\Mski;
 use App\Models\Bank;
+use App\Models\Umum;
 use Illuminate\Support\Collection;
 
 class UserController extends Controller
@@ -18,9 +19,10 @@ class UserController extends Controller
 
         // Ambil data dari masing-masing model hanya milik user yang sedang login
         $veraRequests = Vera::where('id_satker', $nip)->latest()->get();
-        $pdRequests   = LayananPd::where('id_satker', $nip)->latest()->get();
+        $pdRequests = LayananPd::where('id_satker', $nip)->latest()->get();
         $mskiRequests = Mski::where('id_satker', $nip)->latest()->get();
         $bankRequests = Bank::where('id_satker', $nip)->latest()->get();
+        $umumRequests = Umum::where('id_satker', $nip)->latest()->get();
 
         // Gabungkan semua data untuk tab "Semua"
         $allRequests = new Collection();
@@ -45,6 +47,11 @@ class UserController extends Controller
             $allRequests->push($item);
         });
 
+        $umumRequests->each(function ($item) use ($allRequests) {
+            $item->layanan_type = 'UMUM';
+            $allRequests->push($item);
+        });
+
         // Urutkan berdasarkan created_at terbaru
         $allRequests = $allRequests->sortByDesc('created_at')->values();
 
@@ -64,6 +71,7 @@ class UserController extends Controller
             'pdRequests',
             'mskiRequests',
             'bankRequests',
+            'umumRequests',
             'allRequests',
             'tahunList'
         ));

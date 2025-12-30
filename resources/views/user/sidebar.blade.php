@@ -59,6 +59,13 @@
         <span>Layanan PD</span>
     </a>
 </li>
+
+<li class="nav-item {{ request()->routeIs('umum.create') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('umum.create') }}">
+            <i class="fas fa-fw fa-users"></i>
+            <span>Layanan Umum</span>
+        </a>
+    </li>
     
     <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">
