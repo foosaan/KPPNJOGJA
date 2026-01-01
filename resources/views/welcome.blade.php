@@ -23,11 +23,29 @@
     <div class="min-h-screen relative overflow-hidden">
         <!-- Background Image -->
         <div class="absolute inset-0 z-0">
-            <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-                alt="Kantor KPPN Yogyakarta" class="w-full h-full object-cover">
+            <div id="hero-slider" class="relative w-full h-full">
+                <img src="{{ asset('template/img/BG/aji07039-min.jpg') }}" alt="Background 1" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-100">
+                <img src="{{ asset('template/img/BG/AJI07039.jpg') }}" alt="Background 2" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-0">
+                <img src="{{ asset('template/img/BG/whatsapp-image-2023-08-15-at-10.50.40.jpeg') }}" alt="Background 3" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-0">
+            </div>
             <!-- Overlay untuk readability -->
             <div class="absolute inset-0 bg-black/60"></div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const slides = document.querySelectorAll('#hero-slider img');
+                let currentSlide = 0;
+                
+                setInterval(() => {
+                    slides[currentSlide].classList.remove('opacity-100');
+                    slides[currentSlide].classList.add('opacity-0');
+                    currentSlide = (currentSlide + 1) % slides.length;
+                    slides[currentSlide].classList.remove('opacity-0');
+                    slides[currentSlide].classList.add('opacity-100');
+                }, 5000);
+            });
+        </script>
 
         <!-- Content -->
         <div class="relative z-10 flex flex-col min-h-screen">

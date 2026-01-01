@@ -9,9 +9,9 @@ return [
     | Default Cache Store
     |--------------------------------------------------------------------------
     |
-    | This option controls the default cache store that will be used by the
-    | framework. This connection is utilized if another isn't explicitly
-    | specified when running a cache operation inside the application.
+    | Opsi ini menentukan cache store default yang akan digunakan oleh
+    | framework. Koneksi ini akan digunakan jika store lain tidak ditentukan
+    | secara eksplisit saat menjalankan operasi cache di dalam aplikasi.
     |
     */
 

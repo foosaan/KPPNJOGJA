@@ -39,25 +39,26 @@
                 <form action="{{ route('admin.layanan.store') }}" method="POST">
                     @csrf
 
-                    <!-- Tipe Layanan -->
-<div class="form-group">
-    <label for="layanan_type" class="font-weight-bold">
-        Tipe Layanan <span class="text-danger">*</span>
-    </label>
-    <input type="text"
-           name="layanan_type"
-           id="layanan_type"
-           value="{{ old('layanan_type') }}"
-           class="form-control @error('layanan_type') is-invalid @enderror"
-           placeholder="Contoh: Vera, PD, MSKI, Bank, Umum"
-           required>
-    @error('layanan_type')
-    <div class="invalid-feedback">{{ $message }}</div>
-    @enderror
-    <small class="form-text text-muted">
-        <i class="fas fa-info-circle"></i> Ketik nama divisi/tipe layanan (contoh: Vera, Umum, Kepegawaian)
-    </small>
-</div>
+                    <!-- Pilih Divisi -->
+                    <div class="form-group">
+                        <label for="divisi_id" class="font-weight-bold">
+                            Divisi <span class="text-danger">*</span>
+                        </label>
+                        <select name="divisi_id" id="divisi_id" class="form-control @error('divisi_id') is-invalid @enderror" required>
+                            <option value="">-- Pilih Divisi --</option>
+                            @foreach($divisis as $divisi)
+                                <option value="{{ $divisi->id }}" {{ old('divisi_id') == $divisi->id ? 'selected' : '' }}>
+                                    {{ $divisi->nama }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('divisi_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle"></i> Pilih divisi untuk layanan ini. Tambah divisi baru di <a href="{{ route('admin.layanan.index') }}">Kelola Divisi</a>.
+                        </small>
+                    </div>
 
                     {{-- Jenis Layanan --}}
                     <div class="form-group">

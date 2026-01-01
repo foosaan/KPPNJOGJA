@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\LayananPd;
 use App\Models\Layanan;
+use App\Models\Divisi;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -12,11 +13,16 @@ class PdController extends Controller
 {
     public function create()
     {
-        // Ambil layanan PD dari tabel layanans
-        $jenis_layanan = Layanan::where('layanan_type', 'PD')
-            ->where('is_active', true)
-            ->pluck('jenis_layanan')
-            ->toArray();
+        // Get divisi PD
+        $divisi = Divisi::where('nama', 'PD')->first();
+        
+        $jenis_layanan = [];
+        if ($divisi) {
+            $jenis_layanan = Layanan::where('divisi_id', $divisi->id)
+                ->where('is_active', true)
+                ->pluck('jenis_layanan')
+                ->toArray();
+        }
 
         return view('user.layanan-pd.create', [
             'jenis_layanan' => $jenis_layanan,

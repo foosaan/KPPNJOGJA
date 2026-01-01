@@ -11,8 +11,12 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('umums', function (Blueprint $table) {
-            $table->string('status')->default('baru')->after('keterangan');
-            $table->unsignedBigInteger('staff_id')->nullable()->after('status');
+            if (!Schema::hasColumn('umums', 'status')) {
+                $table->string('status')->default('baru')->after('keterangan');
+            }
+            if (!Schema::hasColumn('umums', 'staff_id')) {
+                $table->unsignedBigInteger('staff_id')->nullable()->after('status');
+            }
         });
     }
 

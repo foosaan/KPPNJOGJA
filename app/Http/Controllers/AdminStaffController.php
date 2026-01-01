@@ -3,35 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Divisi;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 
 class AdminStaffController extends Controller
 {
-    private $divisiList = [
-        'MSKI',
-        'VERA',
-        'BANK',
-        'PD',
-        'UMUM',
-    ];
-
     public function index()
     {
         $staffs = User::where('role', 'staff')->get();
-return view('admin.staffs.index', compact('staffs'));
-
+        return view('admin.staffs.index', compact('staffs'));
     }
 
     public function create()
     {
-        $divisiList = $this->divisiList;
+        $divisiList = Divisi::where('is_active', true)->orderBy('nama')->pluck('nama')->toArray();
         return view('admin.staffs.create', compact('divisiList'));
     }
 
     public function store(Request $request)
     {
+        $divisiNames = Divisi::where('is_active', true)->pluck('nama')->toArray();
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => [
@@ -47,7 +41,7 @@ return view('admin.staffs.index', compact('staffs'));
             ],
             'divisi' => [
                 'required',
-                Rule::in($this->divisiList),
+                Rule::in($divisiNames),
             ],
             'password' => 'required|string|min:6|confirmed',
         ]);
@@ -66,12 +60,14 @@ return view('admin.staffs.index', compact('staffs'));
 
     public function edit(User $staff)
     {
-        $divisiList = $this->divisiList;
+        $divisiList = Divisi::where('is_active', true)->orderBy('nama')->pluck('nama')->toArray();
         return view('admin.staffs.edit', compact('staff', 'divisiList'));
     }
 
     public function update(Request $request, User $staff)
     {
+        $divisiNames = Divisi::where('is_active', true)->pluck('nama')->toArray();
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => [
@@ -87,7 +83,7 @@ return view('admin.staffs.index', compact('staffs'));
             ],
             'divisi' => [
                 'required',
-                Rule::in($this->divisiList),
+                Rule::in($divisiNames),
             ],
             'password' => 'nullable|string|min:6|confirmed',
         ]);

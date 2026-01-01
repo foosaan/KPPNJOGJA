@@ -14,7 +14,7 @@ class Layanan extends Model
     public $incrementing = true;
 
     protected $fillable = [
-        'layanan_type',
+        'divisi_id',
         'jenis_layanan',
         'deskripsi',
         'is_active',
@@ -26,11 +26,18 @@ class Layanan extends Model
         'updated_at' => 'datetime',
     ];
 
-
-    // Filter berdasarkan type
-    public function scopeByType($query, $type)
+    /**
+     * Get the divisi that owns the layanan
+     */
+    public function divisi()
     {
-        return $type ? $query->where('layanan_type', $type) : $query;
+        return $this->belongsTo(Divisi::class);
+    }
+
+    // Filter berdasarkan divisi
+    public function scopeByDivisi($query, $divisiId)
+    {
+        return $divisiId ? $query->where('divisi_id', $divisiId) : $query;
     }
 
     // Filter layanan aktif
@@ -70,25 +77,31 @@ class Layanan extends Model
     |--------------------------------------------------------------------------
     */
 
-    // Badge warna untuk UI
+    // Badge warna untuk UI (based on divisi name)
     public function getBadgeColorAttribute()
     {
+        if (!$this->divisi) return 'secondary';
+        
         return [
             'Vera' => 'info',
             'PD' => 'warning',
             'MSKI' => 'success',
             'Bank' => 'primary',
-        ][$this->layanan_type] ?? 'secondary';
+            'Umum' => 'dark',
+        ][$this->divisi->nama] ?? 'secondary';
     }
 
-    // Icon otomatis berdasarkan type
+    // Icon otomatis berdasarkan divisi
     public function getIconAttribute()
     {
+        if (!$this->divisi) return 'fa-cog';
+        
         return [
             'Vera' => 'fa-check-circle',
             'PD' => 'fa-money-bill-wave',
             'MSKI' => 'fa-chart-line',
             'Bank' => 'fa-university',
-        ][$this->layanan_type] ?? 'fa-cog';
+            'Umum' => 'fa-folder',
+        ][$this->divisi->nama] ?? 'fa-cog';
     }
 }

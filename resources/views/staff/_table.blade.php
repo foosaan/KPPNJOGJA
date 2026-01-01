@@ -10,6 +10,7 @@
                 <th>Tanggal</th>
                 <th>Status</th>
                 <th>Alasan Penolakan</th>
+                <th>Feedback</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -30,6 +31,18 @@
                     <td>{{ ucfirst($request->status ?? '-') }}</td>
                     <td>{{ $request->alasan_penolakan ?? '-' }}</td>
                     <td>
+                        @if($request->feedback)
+                            <div><strong>{{ $request->feedback }}</strong></div>
+                            @if($request->feedback_file)
+                                <a href="{{ asset('storage/' . $request->feedback_file) }}" target="_blank">
+                                    Lihat File Feedback
+                                </a>
+                            @endif
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td>
                         <form action="{{ route('staff.updateStatus', [$request->id, $jenis]) }}" method="POST">
                             @csrf
                             @method('PUT')
@@ -44,12 +57,24 @@
                                 placeholder="Tuliskan alasan penolakan...">{{ $request->alasan_penolakan }}</textarea>
                             <button type="submit" class="btn btn-sm btn-primary mt-2">Simpan</button>
                         </form>
+
+                        {{-- Form feedback untuk berkas ditolak --}}
+                        @if(!$request->feedback)
+                            <form action="{{ route('staff.feedback.update', $request->id) }}" method="POST" enctype="multipart/form-data" class="mt-2 border-top pt-2">
+                                @csrf
+                                @method('PUT')
+                                <textarea name="feedback" class="form-control form-control-sm" placeholder="Isi feedback..." required></textarea>
+                                <input type="file" name="feedback_file" class="form-control form-control-sm mt-1">
+                                <button type="submit" class="btn btn-success btn-sm mt-1">Simpan Feedback</button>
+                            </form>
+                        @endif
                     </td>
                 </tr>
                 @endif
             @empty
-                <tr><td colspan="9" class="text-center">Tidak ada data layanan Vera{{ strtoupper($jenis) }}</td></tr>
+                <tr><td colspan="10" class="text-center">Tidak ada data layanan {{ strtoupper($jenis) }}</td></tr>
             @endforelse
         </tbody>
     </table>
 </div>
+

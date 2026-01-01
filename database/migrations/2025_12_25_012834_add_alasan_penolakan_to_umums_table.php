@@ -11,7 +11,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('umums', function (Blueprint $table) {
-            $table->text('alasan_penolakan')->nullable()->after('status');
+            if (!Schema::hasColumn('umums', 'alasan_penolakan')) {
+                $table->text('alasan_penolakan')->nullable()->after('status');
+            }
         });
     }
 

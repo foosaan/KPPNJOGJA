@@ -32,40 +32,23 @@
 
     </div>
 
-    <!-- Cards Total Layanan -->
+    <!-- Cards Total Layanan per Divisi -->
     <div class="row">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary mb-3">
+        @php
+            $colors = ['primary', 'success', 'warning', 'danger', 'info', 'secondary', 'dark'];
+            $colorIndex = 0;
+        @endphp
+        @foreach($divisiStats as $slug => $stat)
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-{{ $colors[$colorIndex % count($colors)] }}">
                 <div class="card-body">
-                    <h5 class="card-title">Total Layanan Vera</h5>
-                    <p class="card-text display-4">{{ $veraCount }}</p>
+                    <h5 class="card-title">Layanan {{ $stat['nama'] }}</h5>
+                    <p class="card-text display-4">{{ $stat['count'] }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Total Layanan PD</h5>
-                    <p class="card-text display-4">{{ $pdCount }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Total Layanan MSKI</h5>
-                    <p class="card-text display-4">{{ $mskiCount }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-danger mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Total Layanan Bank</h5>
-                    <p class="card-text display-4">{{ $bankCount }}</p>
-                </div>
-            </div>
-        </div>
+        @php $colorIndex++; @endphp
+        @endforeach
     </div>
 
     <!-- Filter -->

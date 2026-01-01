@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Umum;
 use App\Models\Layanan;
+use App\Models\Divisi;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
@@ -16,10 +17,16 @@ class UmumController extends Controller
      */
     public function create()
     {
-        $jenis_layanan = Layanan::where('layanan_type', 'Umum')
-            ->where('is_active', true)
-            ->pluck('jenis_layanan')
-            ->toArray();
+        // Get divisi Umum
+        $divisi = Divisi::where('nama', 'Umum')->first();
+        
+        $jenis_layanan = [];
+        if ($divisi) {
+            $jenis_layanan = Layanan::where('divisi_id', $divisi->id)
+                ->where('is_active', true)
+                ->pluck('jenis_layanan')
+                ->toArray();
+        }
 
         return view('user.layanan-umum.create', [
             'jenis_layanan'    => $jenis_layanan,

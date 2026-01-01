@@ -1,306 +1,174 @@
 @extends('staff.app')
 
 @section('content')
-<div class="container">
+    <div class="container-fluid px-4">
+        <h2 class="mb-4">Berkas Ditolak</h2>
 
-    <h2 class="mb-4">Berkas Ditolak</h2>
-
-    @php
-        $divisi = strtoupper(Auth::user()->divisi);
-    @endphp
-
-    <!-- Tabs -->
-    <ul class="nav nav-tabs" id="layananTabs" role="tablist">
-        @if($divisi === 'VERA')
-            <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#vera" role="tab">Layanan Vera</a></li>
-        @elseif($divisi === 'PD')
-            <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#pd" role="tab">Layanan PD</a></li>
-        @elseif($divisi === 'MSKI')
-            <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#mski" role="tab">Layanan MSKI</a></li>
-        @elseif($divisi === 'BANK')
-            <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#bank" role="tab">Layanan Bank</a></li>
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show">
+                {{ session('success') }}
+                <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+            </div>
         @endif
-    </ul>
 
-    <div class="tab-content p-3 border border-top-0 rounded-bottom">
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show">
+                {{ session('error') }}
+                <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+            </div>
+        @endif
 
-        {{-- VERA --}}
-        @if($divisi === 'VERA')
-        <div class="tab-pane fade show active" id="vera" role="tabpanel">
-             @includeWhen(isset($veraRequests), 'staff._table', ['requests' => $veraRequests, 'jenis' => 'vera'])
-        </div>
-
-        
-
-        {{-- PD --}}
-        @elseif($divisi === 'PD')
-        <div class="tab-pane fade show active" id="pd" role="tabpanel">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>No Berkas</th>
-                            <th>Nama User</th>
-                            <th>Jenis Layanan</th>
-                            <th>Keterangan</th>
-                            <th>File</th>
-                            <th>Tanggal</th>
-                            <th>Status</th>
-                            <th>Alasan Penolakan</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($pdRequests as $request)
-                            @if($request->status == 'ditolak')
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" style="min-width: 1200px;">
+                        <thead class="thead-light">
                             <tr>
-                                <td>{{ $request->no_berkas }}</td>
-                                <td>{{ $request->user->name ?? '-' }}</td>
-                                <td>{{ $request->jenis_layanan }}</td>
-                                <td>{{ $request->keterangan ?? '-' }}</td>
-                                <td>
-                                    @if($request->file_path)
-                                        <a href="{{ asset('storage/'.$request->file_path) }}" target="_blank">Lihat File</a>
-                                    @else - @endif
-                                </td>
-                                <td>{{ $request->created_at->format('d/m/Y H:i') }}</td>
-                                <td>{{ ucfirst($request->status ?? '-') }}</td>
-                                <td>{{ $request->alasan_penolakan ?? '-' }}</td>
-                                <td>
-                                    <form action="{{ route('staff.updateStatus', [$request->id, 'pd']) }}" method="POST">
-                                        @csrf
-                                        @method('PUT')
-                                        <select name="status" class="form-control form-control-sm" onchange="toggleAlasan(this)">
-                                            <option value="baru">Baru</option>
-                                            <option value="diproses">Diproses</option>
-                                            <option value="selesai">Selesai</option>
-                                            <option value="ditolak" selected>Ditolak</option>
-                                        </select>
-                                        <textarea name="alasan_penolakan" class="form-control mt-2 alasan-box"
-                                            style="display:block;" required
-                                            placeholder="Tuliskan alasan penolakan...">{{ $request->alasan_penolakan }}</textarea>
-                                        <button type="submit" class="btn btn-sm btn-primary mt-2">Simpan</button>
-                                    </form>
-                                </td>
+                                <th style="width: 12%;">No Berkas</th>
+                                <th style="width: 10%;">Nama User</th>
+                                <th style="width: 18%;">Jenis Layanan</th>
+                                <th style="width: 12%;">Keterangan</th>
+                                <th style="width: 6%;">File</th>
+                                <th style="width: 10%;">Tanggal</th>
+                                <th style="width: 7%;">Status</th>
+                                <th style="width: 12%;">Feedback Terkirim</th>
+                                <th style="width: 13%;">Aksi</th>
                             </tr>
-                            @endif
-                        @empty
-                            <tr><td colspan="9" class="text-center">Tidak ada data layanan PD</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @forelse($allRequests as $request)
+                                <tr>
+                                    <td>{{ $request->no_berkas }}</td>
+                                    <td>{{ $request->user->name ?? '-' }}</td>
+                                    <td>{{ $request->jenis_layanan }}</td>
+                                    <td>{{ $request->keterangan ?? '-' }}</td>
+                                    <td>
+                                        @if($request->file_path)
+                                            <a href="{{ asset('storage/' . $request->file_path) }}" target="_blank">Lihat File</a>
+                                        @else - @endif
+                                    </td>
+                                    <td>{{ $request->created_at->format('d/m/Y H:i') }}</td>
+                                    <td><span class="badge badge-danger">{{ ucfirst($request->status ?? '-') }}</span></td>
+                                    <td>
+                                        @if($request->feedback || $request->feedback_file)
+                                            <span class="badge badge-success mb-1">
+                                                <i class="fas fa-check-circle"></i> Sudah Dikirim
+                                            </span>
+                                            @if($request->feedback_file)
+                                                <br>
+                                                <a href="{{ asset('storage/' . $request->feedback_file) }}" 
+                                                    target="_blank" class="btn btn-sm btn-outline-success mt-1">
+                                                    <i class="fas fa-file-download"></i> Lihat File
+                                                </a>
+                                            @endif
+                                            @if($request->feedback)
+                                                <br>
+                                                <small class="text-muted" title="{{ $request->feedback }}">
+                                                    {{ Str::limit($request->feedback, 30) }}
+                                                </small>
+                                            @endif
+                                        @else
+                                            <span class="badge badge-secondary">
+                                                <i class="fas fa-clock"></i> Belum Ada
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <!-- Feedback Button -->
+                                            @if($request->feedback || $request->feedback_file)
+                                                <button type="button" class="btn btn-sm btn-success" data-toggle="modal" 
+                                                    data-target="#feedbackModal{{ $request->id }}">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                            @else
+                                                <button type="button" class="btn btn-sm btn-warning" data-toggle="modal" 
+                                                    data-target="#feedbackModal{{ $request->id }}">
+                                                    <i class="fas fa-comment-alt"></i> Feedback
+                                                </button>
+                                            @endif
+                                            
+                                            <!-- Status Dropdown -->
+                                            <form action="{{ route('staff.updateStatus', [$request->id, $request->layanan_type ?? 'generik']) }}" 
+                                                method="POST" class="ml-1">
+                                                @csrf
+                                                @method('PUT')
+                                                <select name="status" class="form-control form-control-sm"
+                                                    onchange="this.form.submit()">
+                                                    <option value="baru" {{ $request->status == 'baru' ? 'selected' : '' }}>Baru</option>
+                                                    <option value="diproses" {{ $request->status == 'diproses' ? 'selected' : '' }}>Diproses</option>
+                                                    <option value="selesai" {{ $request->status == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                                                    <option value="ditolak" {{ $request->status == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+                                                </select>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Feedback Modal -->
+                                <div class="modal fade" id="feedbackModal{{ $request->id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <form action="{{ route('staff.feedback.update', $request->id) }}" method="POST" enctype="multipart/form-data">
+                                                @csrf
+                                                @method('PUT')
+                                                <div class="modal-header bg-warning">
+                                                    <h5 class="modal-title">
+                                                        <i class="fas fa-comment-alt"></i> Berikan Feedback / Alasan Penolakan
+                                                    </h5>
+                                                    <button type="button" class="close" data-dismiss="modal">
+                                                        <span>&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-2">
+                                                        <strong>No Berkas:</strong> {{ $request->no_berkas }}
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <strong>Layanan:</strong> {{ $request->jenis_layanan }}
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="feedback{{ $request->id }}"><strong>Feedback / Alasan Penolakan</strong></label>
+                                                        <textarea name="feedback" id="feedback{{ $request->id }}" class="form-control" rows="4" 
+                                                            placeholder="Jelaskan alasan penolakan atau feedback untuk user..." 
+                                                            required>{{ $request->feedback ?? $request->alasan_penolakan ?? '' }}</textarea>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label><strong>File Feedback (opsional)</strong></label>
+                                                        <input type="file" name="feedback_file" class="form-control-file" 
+                                                            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                                        <small class="text-muted">Format: PDF, JPG, PNG, DOC, DOCX (Max 2MB)</small>
+                                                        @if($request->feedback_file)
+                                                            <div class="mt-2">
+                                                                <i class="fas fa-file"></i> File saat ini: 
+                                                                <a href="{{ asset('storage/' . $request->feedback_file) }}" target="_blank" class="text-primary">
+                                                                    Lihat File
+                                                                </a>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                        <i class="fas fa-times"></i> Batal
+                                                    </button>
+                                                    <button type="submit" class="btn btn-warning">
+                                                        <i class="fas fa-paper-plane"></i> Kirim Feedback
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <tr>
+                                    <td colspan="9" class="text-center">Tidak ada data berkas ditolak</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-
-        {{-- MSKI --}}
-        @elseif($divisi === 'MSKI')
-        <div class="tab-pane fade show active" id="mski" role="tabpanel">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>No Berkas</th>
-                            <th>Nama User</th>
-                            <th>Jenis Layanan</th>
-                            <th>Keterangan</th>
-                            <th>File</th>
-                            <th>Tanggal</th>
-                            <th>Status</th>
-                            <th>Alasan Penolakan</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($mskiRequests as $request)
-                            @if($request->status == 'ditolak')
-                            <tr>
-                                <td>{{ $request->no_berkas }}</td>
-                                <td>{{ $request->user->name ?? '-' }}</td>
-                                <td>{{ $request->jenis_layanan }}</td>
-                                <td>{{ $request->keterangan ?? '-' }}</td>
-                                <td>
-                                    @if($request->file_path)
-                                        <a href="{{ asset('storage/'.$request->file_path) }}" target="_blank">Lihat File</a>
-                                    @else - @endif
-                                </td>
-                                <td>{{ $request->created_at->format('d/m/Y H:i') }}</td>
-                                <td>{{ ucfirst($request->status ?? '-') }}</td>
-                                <td>{{ $request->alasan_penolakan ?? '-' }}</td>
-                                <td>
-                                    <form action="{{ route('staff.updateStatus', [$request->id, 'mski']) }}" method="POST">
-                                        @csrf
-                                        @method('PUT')
-                                        <select name="status" class="form-control form-control-sm" onchange="toggleAlasan(this)">
-                                            <option value="baru">Baru</option>
-                                            <option value="diproses">Diproses</option>
-                                            <option value="selesai">Selesai</option>
-                                            <option value="ditolak" selected>Ditolak</option>
-                                        </select>
-                                        <textarea name="alasan_penolakan" class="form-control mt-2 alasan-box"
-                                            style="display:block;" required
-                                            placeholder="Tuliskan alasan penolakan...">{{ $request->alasan_penolakan }}</textarea>
-                                        <button type="submit" class="btn btn-sm btn-primary mt-2">Simpan</button>
-                                    </form>
-                                </td>
-                            </tr>
-                            @endif
-                        @empty
-                            <tr><td colspan="9" class="text-center">Tidak ada data layanan MSKI</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        {{-- BANK --}}
-        @elseif($divisi === 'BANK')
-        <div class="tab-pane fade show active" id="bank" role="tabpanel">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>No Berkas</th>
-                            <th>Nama User</th>
-                            <th>Jenis Layanan</th>
-                            <th>Keterangan</th>
-                            <th>File</th>
-                            <th>Tanggal</th>
-                            <th>Status</th>
-                            <th>Alasan Penolakan</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($bankRequests as $request)
-                            @if($request->status == 'ditolak')
-                            <tr>
-                                <td>{{ $request->no_berkas }}</td>
-                                <td>{{ $request->user->name ?? '-' }}</td>
-                                <td>{{ $request->jenis_layanan }}</td>
-                                <td>{{ $request->keterangan ?? '-' }}</td>
-                                <td>
-                                    @if($request->file_path)
-                                        <a href="{{ asset('storage/'.$request->file_path) }}" target="_blank">Lihat File</a>
-                                    @else - @endif
-                                </td>
-                                <td>{{ $request->created_at->format('d/m/Y H:i') }}</td>
-                                <td>{{ ucfirst($request->status ?? '-') }}</td>
-                                <td>{{ $request->alasan_penolakan ?? '-' }}</td>
-                                <td>
-                                    <form action="{{ route('staff.updateStatus', [$request->id, 'bank']) }}" method="POST">
-                                        @csrf
-                                        @method('PUT')
-                                        <select name="status" class="form-control form-control-sm" onchange="toggleAlasan(this)">
-                                            <option value="baru">Baru</option>
-                                            <option value="diproses">Diproses</option>
-                                            <option value="selesai">Selesai</option>
-                                            <option value="ditolak" selected>Ditolak</option>
-                                        </select>
-                                        <textarea name="alasan_penolakan" class="form-control mt-2 alasan-box"
-                                            style="display:block;" required
-                                            placeholder="Tuliskan alasan penolakan...">{{ $request->alasan_penolakan }}</textarea>
-                                        <button type="submit" class="btn btn-sm btn-primary mt-2">Simpan</button>
-                                    </form>
-                                </td>
-                            </tr>
-                            @endif
-                        @empty
-                            <tr><td colspan="9" class="text-center">Tidak ada data layanan Bank</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        {{-- UMUM --}}
-@elseif($divisi === 'UMUM')
-<div class="tab-pane fade show active" id="umum" role="tabpanel">
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>No Berkas</th>
-                    <th>Nama User</th>
-                    <th>Jenis Layanan</th>
-                    <th>Keterangan</th>
-                    <th>File</th>
-                    <th>Tanggal</th>
-                    <th>Status</th>
-                    <th>Alasan Penolakan</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($umumRequests as $request)
-                    @if($request->status == 'ditolak')
-                    <tr>
-                        <td>{{ $request->no_berkas }}</td>
-                        <td>{{ $request->user->name ?? '-' }}</td>
-                        <td>{{ $request->jenis_layanan }}</td>
-                        <td>{{ $request->keterangan ?? '-' }}</td>
-                        <td>
-                            @if($request->file_path)
-                                <a href="{{ asset('storage/'.$request->file_path) }}" target="_blank">Lihat File</a>
-                            @else - @endif
-                        </td>
-                        <td>{{ $request->created_at->format('d/m/Y H:i') }}</td>
-                        <td>{{ ucfirst($request->status ?? '-') }}</td>
-                        <td>{{ $request->alasan_penolakan ?? '-' }}</td>
-                        <td>
-                            <form action="{{ route('staff.updateStatus', [$request->id, 'umum']) }}" method="POST">
-                                @csrf
-                                @method('PUT')
-                                <select name="status" class="form-control form-control-sm" onchange="toggleAlasan(this)">
-                                    <option value="baru">Baru</option>
-                                    <option value="diproses">Diproses</option>
-                                    <option value="selesai">Selesai</option>
-                                    <option value="ditolak" selected>Ditolak</option>
-                                </select>
-                                <textarea name="alasan_penolakan" class="form-control mt-2 alasan-box"
-                                    style="display:block;" required
-                                    placeholder="Tuliskan alasan penolakan...">{{ $request->alasan_penolakan }}</textarea>
-                                <button type="submit" class="btn btn-sm btn-primary mt-2">Simpan</button>
-                            </form>
-                        </td>
-                    </tr>
-                    @endif
-                @empty
-                    <tr><td colspan="9" class="text-center">Tidak ada data layanan Umum</td></tr>
-                @endforelse
-            </tbody>
-        </table>
     </div>
-</div>
-@endif
-
-    </div>
-</div>
-
-{{-- SweetAlert2 CDN --}}
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script>
-function toggleAlasan(select){
-    let textarea = select.closest("form").querySelector(".alasan-box");
-    if(select.value === "ditolak"){
-        textarea.style.display = "block";
-        textarea.setAttribute("required", "required"); // wajib diisi
-    } else {
-        textarea.style.display = "none";
-        textarea.removeAttribute("required");
-        textarea.value = "";
-    }
-}
-
-// Notifikasi SweetAlert kalau ada pesan sukses
-@if(session('success'))
-Swal.fire({
-    icon: 'success',
-    title: 'Berhasil',
-    text: '{{ session('success') }}',
-    timer: 2000,
-    showConfirmButton: false
-});
-@endif
-</script>
 @endsection

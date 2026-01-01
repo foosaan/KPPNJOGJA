@@ -5,18 +5,24 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Vera;
 use App\Models\Layanan;
+use App\Models\Divisi;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
-    class VeraController extends Controller
+class VeraController extends Controller
 {
     public function create()
     {
-        // Ambil layanan PD dari tabel layanans
-        $jenis_layanan = Layanan::where('layanan_type', 'Vera')
-            ->where('is_active', true)
-            ->pluck('jenis_layanan')
-            ->toArray();
+        // Get divisi Vera
+        $divisi = Divisi::where('nama', 'Vera')->first();
+        
+        $jenis_layanan = [];
+        if ($divisi) {
+            $jenis_layanan = Layanan::where('divisi_id', $divisi->id)
+                ->where('is_active', true)
+                ->pluck('jenis_layanan')
+                ->toArray();
+        }
 
         return view('user.layanan-vera.create', [
             'jenis_layanan' => $jenis_layanan,

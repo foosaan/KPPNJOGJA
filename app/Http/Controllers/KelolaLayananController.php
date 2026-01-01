@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Layanan;
+use App\Models\Divisi;
 use Illuminate\Http\Request;
 
 class KelolaLayananController extends Controller
@@ -12,11 +13,11 @@ class KelolaLayananController extends Controller
      */
    public function index(Request $request)
 {
-    $query = Layanan::query();
+    $query = Layanan::with('divisi');
 
-    // Filter Type
-    if ($request->filled('type')) {
-        $query->where('layanan_type', $request->type);
+    // Filter Type (now using divisi_id)
+    if ($request->filled('divisi_id')) {
+        $query->where('divisi_id', $request->divisi_id);
     }
 
     // Filter Status
@@ -31,15 +32,18 @@ class KelolaLayananController extends Controller
 
     $layanans = $query->latest()->paginate(15);
 
-    // Statistik - Hitung jumlah tipe yang berbeda secara otomatis
+    // Statistik
     $stats = [
         'total' => Layanan::count(),
-        'total_types' => Layanan::distinct('layanan_type')->count('layanan_type'), // Jumlah tipe berbeda
+        'total_types' => Divisi::count(),
         'active' => Layanan::where('is_active', true)->count(),
         'inactive' => Layanan::where('is_active', false)->count(),
     ];
 
-    return view('admin.layanan.index', compact('layanans', 'stats'));
+    // Load all divisis for dropdown and tabs
+    $divisis = Divisi::orderBy('nama')->get();
+
+    return view('admin.layanan.index', compact('layanans', 'stats', 'divisis'));
 }
 
     /**
@@ -47,7 +51,8 @@ class KelolaLayananController extends Controller
      */
     public function create()
     {
-        return view('admin.layanan.create');
+        $divisis = Divisi::where('is_active', true)->orderBy('nama')->get();
+        return view('admin.layanan.create', compact('divisis'));
     }
 
     /**
@@ -56,11 +61,12 @@ class KelolaLayananController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'layanan_type' => 'required|string|max:50',
+            'divisi_id' => 'required|exists:divisis,id',
             'jenis_layanan' => 'required|string|max:255|unique:layanans,jenis_layanan',
             'deskripsi' => 'nullable|string|max:150',
         ], [
-            'layanan_type.required' => 'Tipe layanan harus dipilih.',
+            'divisi_id.required' => 'Divisi harus dipilih.',
+            'divisi_id.exists' => 'Divisi tidak valid.',
             'jenis_layanan.required' => 'Jenis layanan harus diisi.',
             'jenis_layanan.unique' => 'Jenis layanan sudah digunakan.',
             'deskripsi.max' => 'Deskripsi maksimal 150 karakter.',
@@ -80,7 +86,8 @@ class KelolaLayananController extends Controller
      */
     public function edit(Layanan $layanan)
     {
-        return view('admin.layanan.edit', compact('layanan'));
+        $divisis = Divisi::where('is_active', true)->orderBy('nama')->get();
+        return view('admin.layanan.edit', compact('layanan', 'divisis'));
     }
 
     /**
@@ -89,11 +96,12 @@ class KelolaLayananController extends Controller
     public function update(Request $request, Layanan $layanan)
     {
         $validated = $request->validate([
-            'layanan_type' => 'required|string|max:100',
+            'divisi_id' => 'required|exists:divisis,id',
             'jenis_layanan' => 'required|string|max:255|unique:layanans,jenis_layanan,' . $layanan->id,
             'deskripsi' => 'nullable|string|max:150',
         ], [
-            'layanan_type.required' => 'Tipe layanan harus diisi.',
+            'divisi_id.required' => 'Divisi harus dipilih.',
+            'divisi_id.exists' => 'Divisi tidak valid.',
             'jenis_layanan.required' => 'Jenis layanan harus diisi.',
             'jenis_layanan.unique' => 'Jenis layanan sudah digunakan.',
             'deskripsi.max' => 'Deskripsi maksimal 150 karakter.',
@@ -121,11 +129,21 @@ class KelolaLayananController extends Controller
     /**
      * Toggle aktif/nonaktif
      */
-    public function toggleStatus(Layanan $layanan)
+    public function toggleStatus(Request $request, Layanan $layanan)
     {
         $layanan->is_active = !$layanan->is_active;
         $layanan->save();
 
-        return back()->with('success', 'Status layanan berhasil diperbarui!');
+        // Return JSON for AJAX requests
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'is_active' => $layanan->is_active,
+                'message' => 'Status layanan berhasil diperbarui!'
+            ]);
+        }
+
+        return redirect()->route('admin.layanan.index', ['tab' => 'layanan'])
+            ->with('success', 'Status layanan berhasil diperbarui!');
     }
 }

@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container">
-        <!-- User Profile Section - Compact Vertical Layout -->
+        <!-- User Profile Section -->
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">Profil Pengguna</h5>
@@ -60,369 +60,127 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <input type="text" id="searchInput" class="form-control" placeholder="Cari No Berkas / layanan / Keterangan">
+                <input type="text" id="searchInput" class="form-control" placeholder="Cari No Berkas / Layanan">
             </div>
         </div>
 
         <div class="row">
             <div class="col-md-12">
+                <!-- Tab Navigation - Show all active divisi -->
                 <ul class="nav nav-tabs" id="layananTabs" role="tablist">
-                    <li class="nav-item"><a class="nav-link active" id="semua-tab" data-toggle="tab" href="#semua"
-                            role="tab">Semua</a></li>
-                    <li class="nav-item"><a class="nav-link" id="vera-tab" data-toggle="tab" href="#vera" role="tab">Layanan
-                            Vera</a></li>
-                    <li class="nav-item"><a class="nav-link" id="pd-tab" data-toggle="tab" href="#pd" role="tab">Layanan
-                            PD</a></li>
-                    <li class="nav-item"><a class="nav-link" id="mski-tab" data-toggle="tab" href="#mski" role="tab">Layanan
-                            MSKI</a></li>
-                    <li class="nav-item"><a class="nav-link" id="bank-tab" data-toggle="tab" href="#bank" role="tab">Layanan
-                            Bank</a></li>
-                    <li class="nav-item"><a class="nav-link" id="umum-tab" data-toggle="tab" href="#umum" role="tab">Layanan
-                            Umum</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-filter="" role="tab">Semua</a>
+                    </li>
+                    @foreach($divisis as $divisi)
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-filter="{{ strtoupper($divisi->nama) }}" role="tab">
+                                Layanan {{ $divisi->nama }}
+                            </a>
+                        </li>
+                    @endforeach
                 </ul>
 
-                <div class="tab-content p-3 border border-top-0 rounded-bottom" id="layananTabsContent">
-                    <!-- Tab Semua -->
-                    <div class="tab-pane fade show active" id="semua" role="tabpanel">
-                        <div class="table-responsive">
-                            <table class="table table-striped filterable-table">
-                                <thead>
-                                    <tr>
-                                        <th>No Berkas</th>
-                                        <th>Jenis Layanan</th>
-                                        <th>Keterangan</th>
-                                        <th>File</th>
-                                        <th>Tanggal</th>
-                                        <th>Status</th>
-                                        <th>Alasan Penolakan</th>
-                                        <th>Feedback</th>
-                                        <th>File Feedback</th>
-
+                <div class="tab-content p-3 border border-top-0 rounded-bottom">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="layananTable">
+                            <thead>
+                                <tr>
+                                    <th>No Berkas</th>
+                                    <th>Jenis Layanan</th>
+                                    <th>Keterangan</th>
+                                    <th>File</th>
+                                    <th>Tanggal</th>
+                                    <th>Status</th>
+                                    <th>Alasan Penolakan</th>
+                                    <th>Feedback</th>
+                                    <th>File Feedback</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($allRequests as $request)
+                                    <tr data-layanan-type="{{ strtoupper($request->layanan_type ?? '') }}"
+                                        data-status="{{ strtolower($request->status ?? '') }}">
+                                        <td>{{ $request->no_berkas }}</td>
+                                        <td>{{ ($request->layanan_type ?? '') . ' - ' . $request->jenis_layanan }}</td>
+                                        <td>{{ $request->keterangan ?? '-' }}</td>
+                                        <td>
+                                            @if($request->file_path)
+                                                <a href="{{ asset('storage/' . $request->file_path) }}" target="_blank">Lihat File</a>
+                                            @else - @endif
+                                        </td>
+                                        <td>{{ $request->created_at->format('d/m/Y H:i') }}</td>
+                                        <td>
+                                            @php
+                                                $statusClass = match($request->status) {
+                                                    'baru' => 'badge-primary',
+                                                    'diproses' => 'badge-warning',
+                                                    'selesai' => 'badge-success',
+                                                    'ditolak' => 'badge-danger',
+                                                    default => 'badge-secondary'
+                                                };
+                                            @endphp
+                                            <span class="badge {{ $statusClass }}">{{ ucfirst($request->status ?? '-') }}</span>
+                                        </td>
+                                        <td>{{ $request->alasan_penolakan ?? '-' }}</td>
+                                        <td>{{ $request->feedback ?? '-' }}</td>
+                                        <td>
+                                            @if($request->feedback_file)
+                                                <a href="{{ asset('storage/' . $request->feedback_file) }}" target="_blank">Download</a>
+                                            @else - @endif
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($allRequests as $request)
-                                        <tr>
-                                            <td>{{ $request->no_berkas }}</td>
-                                            <td>{{ $request->layanan_type . ' - ' . $request->jenis_layanan }}</td>
-                                            <td>{{ $request->keterangan ?? '-' }}</td>
-                                            <td>
-                                                @if($request->file_path)
-                                                    <a href="{{ asset('storage/' . $request->file_path) }}" target="_blank">Lihat
-                                                        File</a>
-                                                @else - @endif
-                                            </td>
-                                            <td>{{ $request->created_at->format('d/m/Y H:i') }}</td>
-                                            <td>{{ $request->status ? ucfirst($request->status) : '-' }}</td>
-                                            <td>{{ $request->alasan_penolakan ?? '-' }}</td>
-                                            <td>{{ $request->feedback ?? '-' }}</td>
-                                            <td>
-                                                @if($request->feedback_file)
-                                                    <a href="{{ asset('storage/' . $request->feedback_file) }}"
-                                                        target="_blank">Download</a>
-                                                @else - @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="text-center">Tidak ada data layanan</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Tab Vera -->
-                    <div class="tab-pane fade" id="vera" role="tabpanel">
-                        <div class="table-responsive">
-                            <table class="table table-striped filterable-table">
-                                <thead>
-                                    <tr>
-                                        <th>No Berkas</th>
-                                        <th>Jenis Layanan</th>
-                                        <th>Keterangan</th>
-                                        <th>File</th>
-                                        <th>Tanggal</th>
-                                        <th>Status</th>
-                                        <th>Alasan Penolakan</th>
-                                        <th>Feedback</th>
-                                        <th>File Feedback</th>
-
+                                @empty
+                                    <tr class="empty-row">
+                                        <td colspan="9" class="text-center">Tidak ada data layanan</td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($veraRequests as $request)
-                                        <tr>
-                                            <td>{{ $request->no_berkas }}</td>
-                                            <td>{{ $request->jenis_layanan }}</td>
-                                            <td>{{ $request->keterangan ?? '-' }}</td>
-                                            <td>
-                                                @if($request->file_path)
-                                                    <a href="{{ asset('storage/' . $request->file_path) }}" target="_blank">Lihat
-                                                        File</a>
-                                                @else - @endif
-                                            </td>
-                                            <td>{{ $request->created_at->format('d/m/Y H:i') }}</td>
-                                            <td>{{ $request->status ? ucfirst($request->status) : '-' }}</td>
-                                            <td>{{ $request->alasan_penolakan ?? '-' }}</td>
-                                            <td>{{ $request->feedback ?? '-' }}</td>
-                                            <td>
-                                                @if($request->feedback_file)
-                                                    <a href="{{ asset('storage/' . $request->feedback_file) }}"
-                                                        target="_blank">Download</a>
-                                                @else - @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="text-center">Tidak ada data layanan Vera</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
-
-                    <!-- Tab PD -->
-                    <div class="tab-pane fade" id="pd" role="tabpanel">
-                        <div class="table-responsive">
-                            <table class="table table-striped filterable-table">
-                                <thead>
-                                    <tr>
-                                        <th>No Berkas</th>
-                                        <th>Jenis Layanan</th>
-                                        <th>Keterangan</th>
-                                        <th>File</th>
-                                        <th>Tanggal</th>
-                                        <th>Status</th>
-                                        <th>Alasan Penolakan</th>
-                                        <th>Feedback</th>
-                                        <th>File Feedback</th>
-
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($pdRequests as $request)
-                                        <tr>
-                                            <td>{{ $request->no_berkas }}</td>
-                                            <td>{{ $request->jenis_layanan }}</td>
-                                            <td>{{ $request->keterangan ?? '-' }}</td>
-                                            <td>
-                                                @if($request->file_path)
-                                                    <a href="{{ asset('storage/' . $request->file_path) }}" target="_blank">Lihat
-                                                        File</a>
-                                                @else - @endif
-                                            </td>
-                                            <td>{{ $request->created_at->format('d/m/Y H:i') }}</td>
-                                            <td>{{ $request->status ? ucfirst($request->status) : '-' }}</td>
-                                            <td>{{ $request->alasan_penolakan ?? '-' }}</td>
-                                            <td>{{ $request->feedback ?? '-' }}</td>
-                                            <td>
-                                                @if($request->feedback_file)
-                                                    <a href="{{ asset('storage/' . $request->feedback_file) }}"
-                                                        target="_blank">Download</a>
-                                                @else - @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="text-center">Tidak ada data layanan PD</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Tab MSKI -->
-                    <div class="tab-pane fade" id="mski" role="tabpanel">
-                        <div class="table-responsive">
-                            <table class="table table-striped filterable-table">
-                                <thead>
-                                    <tr>
-                                        <th>No Berkas</th>
-                                        <th>Jenis Layanan</th>
-                                        <th>Keterangan</th>
-                                        <th>File</th>
-                                        <th>Tanggal</th>
-                                        <th>Status</th>
-                                        <th>Alasan Penolakan</th>
-                                        <th>Feedback</th>
-                                        <th>File Feedback</th>
-
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($mskiRequests as $request)
-                                        <tr>
-                                            <td>{{ $request->no_berkas }}</td>
-                                            <td>{{ $request->jenis_layanan }}</td>
-                                            <td>{{ $request->keterangan ?? '-' }}</td>
-                                            <td>
-                                                @if($request->file_path)
-                                                    <a href="{{ asset('storage/' . $request->file_path) }}" target="_blank">Lihat
-                                                        File</a>
-                                                @else - @endif
-                                            </td>
-                                            <td>{{ $request->created_at->format('d/m/Y H:i') }}</td>
-                                            <td>{{ $request->status ? ucfirst($request->status) : '-' }}</td>
-                                            <td>{{ $request->alasan_penolakan ?? '-' }}</td>
-                                            <td>{{ $request->feedback ?? '-' }}</td>
-                                            <td>
-                                                @if($request->feedback_file)
-                                                    <a href="{{ asset('storage/' . $request->feedback_file) }}"
-                                                        target="_blank">Download</a>
-                                                @else - @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="text-center">Tidak ada data layanan MSKI</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Tab Bank -->
-                    <div class="tab-pane fade" id="bank" role="tabpanel">
-                        <div class="table-responsive">
-                            <table class="table table-striped filterable-table">
-                                <thead>
-                                    <tr>
-                                        <th>No Berkas</th>
-                                        <th>Jenis Layanan</th>
-                                        <th>Keterangan</th>
-                                        <th>File</th>
-                                        <th>Tanggal</th>
-                                        <th>Status</th>
-                                        <th>Alasan Penolakan</th>
-                                        <th>Feedback</th>
-                                        <th>File Feedback</th>
-
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($bankRequests as $request)
-                                        <tr>
-                                            <td>{{ $request->no_berkas }}</td>
-                                            <td>{{ $request->jenis_layanan }}</td>
-                                            <td>{{ $request->keterangan ?? '-' }}</td>
-                                            <td>
-                                                @if($request->file_path)
-                                                    <a href="{{ asset('storage/' . $request->file_path) }}" target="_blank">Lihat
-                                                        File</a>
-                                                @else - @endif
-                                            </td>
-                                            <td>{{ $request->created_at->format('d/m/Y H:i') }}</td>
-                                            <td>{{ $request->status ? ucfirst($request->status) : '-' }}</td>
-                                            <td>{{ $request->alasan_penolakan ?? '-' }}</td>
-                                            <td>{{ $request->feedback ?? '-' }}</td>
-                                            <td>
-                                                @if($request->feedback_file)
-                                                    <a href="{{ asset('storage/' . $request->feedback_file) }}"
-                                                        target="_blank">Download</a>
-                                                @else - @endif
-                                            </td>
-                                        </tr>
-
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="text-center">Tidak ada data layanan Bank</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="tab-pane fade" id="umum">
-                        <div class="table-responsive">
-                            <table class="table table-striped filterable-table">
-                                <thead>
-                                    <tr>
-                                        <th>No Berkas</th>
-                                        <th>Jenis Layanan</th>
-                                        <th>Keterangan</th>
-                                        <th>File</th>
-                                        <th>Tanggal</th>
-                                        <th>Status</th>
-                                        <th>Alasan Penolakan</th>
-                                        <th>Feedback</th>
-                                        <th>File Feedback</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    @forelse($umumRequests as $request)
-                                        <tr>
-                                            <td>{{ $request->no_berkas }}</td>
-                                            <td>{{ $request->jenis_layanan }}</td>
-                                            <td>{{ $request->keterangan ?? '-' }}</td>
-
-                                            <td>
-                                                @if($request->file_path)
-                                                    <a href="{{ asset('storage/' . $request->file_path) }}" target="_blank">Lihat
-                                                        File</a>
-                                                @else - @endif
-                                            </td>
-
-                                            <td>{{ $request->created_at->format('d/m/Y H:i') }}</td>
-                                            <td>{{ ucfirst($request->status ?? '-') }}</td>
-                                            <td>{{ $request->alasan_penolakan ?? '-' }}</td>
-
-                                            <td>{{ $request->feedback ?? '-' }}</td>
-
-                                            <td>
-                                                @if($request->feedback_file)
-                                                    <a href="{{ asset('storage/' . $request->feedback_file) }}"
-                                                        target="_blank">Download</a>
-                                                @else - @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="9" class="text-center">Tidak ada data layanan Umum</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
                 </div>
             </div>
         </div>
     </div>
+@endsection
 
-    {{-- Script Filter --}}
-    <script>
-        function applyFilters() {
-            const statusFilter = document.getElementById('filterStatus').value.toLowerCase();
-            const bulanFilter = document.getElementById('filterBulan').value;
-            const tahunFilter = document.getElementById('filterTahun').value;
-            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentLayananFilter = '';
 
-            document.querySelectorAll('.filterable-table tbody tr').forEach(row => {
-                const noBerkas = row.cells[0]?.textContent.trim().toLowerCase();
-                const jenis = row.cells[1]?.textContent.trim().toLowerCase();
-                const ket = row.cells[2]?.textContent.trim().toLowerCase();
-                const file = row.cells[3]?.textContent.trim().toLowerCase();
-                const tanggal = row.cells[4]?.textContent.trim();
-                const status = row.cells[5]?.textContent.trim().toLowerCase();
+    function applyFilters() {
+        const statusFilter = document.getElementById('filterStatus').value.toLowerCase();
+        const bulanFilter = document.getElementById('filterBulan').value;
+        const tahunFilter = document.getElementById('filterTahun').value;
+        const searchQuery = document.getElementById('searchInput').value.toLowerCase();
 
-                let show = true;
+        const rows = document.querySelectorAll('#layananTable tbody tr:not(.empty-row)');
+        let visibleCount = 0;
 
-                // Filter status
-                if (statusFilter && status !== statusFilter) {
-                    show = false;
-                }
+        rows.forEach(row => {
+            const rowLayanan = row.dataset.layananType || '';
+            const rowStatus = row.dataset.status || '';
+            const noBerkas = row.cells[0]?.textContent.trim().toLowerCase() || '';
+            const jenis = row.cells[1]?.textContent.trim().toLowerCase() || '';
+            const ket = row.cells[2]?.textContent.trim().toLowerCase() || '';
+            const tanggal = row.cells[4]?.textContent.trim() || '';
 
-                // Filter bulan & tahun
-                if (tanggal) {
-                    const parts = tanggal.split(' ')[0].split('/'); // dd/mm/yyyy
+            let show = true;
+
+            // Filter by layanan type (from tabs)
+            if (currentLayananFilter && rowLayanan !== currentLayananFilter) {
+                show = false;
+            }
+
+            // Filter status
+            if (show && statusFilter && rowStatus !== statusFilter) {
+                show = false;
+            }
+
+            // Filter bulan & tahun
+            if (show && tanggal && (bulanFilter || tahunFilter)) {
+                const parts = tanggal.split(' ')[0].split('/');
+                if (parts.length >= 3) {
                     const bulan = parts[1];
                     const tahun = parts[2];
 
@@ -433,23 +191,49 @@
                         show = false;
                     }
                 }
+            }
 
-                // Filter search (no berkas, keterangan, file, jenis)
-                if (searchQuery) {
-                    const text = (noBerkas + ' ' + ket + ' ' + file + ' ' + jenis);
-                    if (!text.includes(searchQuery)) {
-                        show = false;
-                    }
+            // Filter search
+            if (show && searchQuery) {
+                const text = noBerkas + ' ' + jenis + ' ' + ket;
+                if (!text.includes(searchQuery)) {
+                    show = false;
                 }
+            }
 
-                row.style.display = show ? '' : 'none';
-            });
-        }
-
-        document.querySelectorAll('#filterStatus, #filterBulan, #filterTahun').forEach(el => {
-            el.addEventListener('change', applyFilters);
+            row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
         });
 
-        document.getElementById('searchInput').addEventListener('keyup', applyFilters);
-    </script>
+        // Show/hide empty message
+        const emptyRow = document.querySelector('#layananTable tbody tr.empty-row');
+        if (emptyRow) {
+            emptyRow.style.display = visibleCount === 0 ? '' : 'none';
+        }
+    }
+
+    // Tab click handlers
+    document.querySelectorAll('#layananTabs .nav-link').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Update active state
+            document.querySelectorAll('#layananTabs .nav-link').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Set filter and apply
+            currentLayananFilter = this.dataset.filter || '';
+            applyFilters();
+        });
+    });
+
+    // Filter event listeners
+    document.getElementById('filterStatus').addEventListener('change', applyFilters);
+    document.getElementById('filterBulan').addEventListener('change', applyFilters);
+    document.getElementById('filterTahun').addEventListener('change', applyFilters);
+    document.getElementById('searchInput').addEventListener('keyup', applyFilters);
+
+    console.log('Dashboard filters initialized');
+});
+</script>
 @endsection

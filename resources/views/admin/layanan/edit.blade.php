@@ -39,26 +39,24 @@
                     @csrf
                     @method('PUT')
 
-                    <!-- Tipe Layanan -->
-<<!-- Tipe Layanan -->
-<div class="form-group">
-    <label for="layanan_type" class="font-weight-bold">
-        Tipe Layanan <span class="text-danger">*</span>
-    </label>
-    <input type="text"
-           name="layanan_type"
-           id="layanan_type"
-           value="{{ old('layanan_type', $layanan->layanan_type) }}"
-           class="form-control @error('layanan_type') is-invalid @enderror"
-           placeholder="Contoh: Vera, PD, MSKI, Bank, Umum"
-           required>
-    @error('layanan_type')
-    <div class="invalid-feedback">{{ $message }}</div>
-    @enderror
-    <small class="form-text text-muted">
-        <i class="fas fa-info-circle"></i> Ketik nama divisi/tipe layanan (contoh: Vera, Umum, Kepegawaian)
-    </small>
-</div>
+                    <!-- Pilih Divisi -->
+                    <div class="form-group">
+                        <label for="divisi_id" class="font-weight-bold">
+                            Divisi <span class="text-danger">*</span>
+                        </label>
+                        <select name="divisi_id" id="divisi_id" class="form-control @error('divisi_id') is-invalid @enderror" required>
+                            <option value="">-- Pilih Divisi --</option>
+                            @foreach($divisis as $divisi)
+                                <option value="{{ $divisi->id }}" {{ old('divisi_id', $layanan->divisi_id) == $divisi->id ? 'selected' : '' }}>
+                                    {{ $divisi->nama }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('divisi_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <!-- Jenis Layanan -->
                     <div class="form-group">
                         <label for="jenis_layanan" class="font-weight-bold">
@@ -74,9 +72,6 @@
                         @error('jenis_layanan')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <small class="form-text text-muted">
-                            <i class="fas fa-info-circle"></i> Nama jenis layanan harus unik dan jelas
-                        </small>
                     </div>
 
                     <!-- Deskripsi -->
@@ -84,21 +79,18 @@
                         <label for="deskripsi" class="font-weight-bold">Deskripsi</label>
                         <textarea name="deskripsi" 
                                   id="deskripsi" 
-                                  rows="5"
+                                  rows="3"
+                                  maxlength="150"
                                   class="form-control @error('deskripsi') is-invalid @enderror"
-                                  placeholder="Jelaskan detail layanan, persyaratan, atau informasi penting (opsional)">{{ old('deskripsi', $layanan->deskripsi) }}</textarea>
+                                  placeholder="Deskripsi layanan (opsional, max 150 karakter)">{{ old('deskripsi', $layanan->deskripsi) }}</textarea>
                         @error('deskripsi')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <small class="form-text text-muted">
-                            <i class="fas fa-info-circle"></i> Deskripsi membantu user memahami layanan (Max: 1000 karakter)
-                        </small>
-                        <small id="charCounter" class="form-text text-muted"></small>
                     </div>
 
                     <!-- Status Aktif -->
                     <div class="form-group">
-                        <div class="custom-control custom-switch custom-switch-lg">
+                        <div class="custom-control custom-switch">
                             <input type="checkbox" 
                                    class="custom-control-input" 
                                    id="is_active" 
@@ -108,33 +100,21 @@
                                 Status Aktif
                             </label>
                         </div>
-                        <small class="form-text text-muted">
-                            <i class="fas fa-info-circle"></i> Layanan aktif akan ditampilkan di form pengajuan user
-                        </small>
                     </div>
 
                     <hr class="my-4">
 
                     <!-- Buttons -->
                     <div class="form-group mb-0">
-                        <button type="submit" class="btn btn-warning btn-icon-split">
-                            <span class="icon text-white-50">
-                                <i class="fas fa-save"></i>
-                            </span>
-                            <span class="text">Update Layanan</span>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save"></i> Update Layanan
                         </button>
-                        <a href="{{ route('admin.layanan.index') }}" class="btn btn-secondary btn-icon-split">
-                            <span class="icon text-white-50">
-                                <i class="fas fa-times"></i>
-                            </span>
-                            <span class="text">Batal</span>
+                        <a href="{{ route('admin.layanan.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Batal
                         </a>
-                        <button type="button" class="btn btn-danger btn-icon-split float-right" 
+                        <button type="button" class="btn btn-danger float-right" 
                                 data-toggle="modal" data-target="#deleteModal">
-                            <span class="icon text-white-50">
-                                <i class="fas fa-trash"></i>
-                            </span>
-                            <span class="text">Hapus</span>
+                            <i class="fas fa-trash"></i> Hapus
                         </button>
                     </div>
                 </form>
@@ -150,26 +130,20 @@
                 <div class="row">
                     <div class="col-md-6">
                         <ul class="list-unstyled mb-0 small">
-                            <li class="mb-2">
-                                <strong>ID Layanan:</strong> #{{ $layanan->id }}
-                            </li>
-                            <li class="mb-2">
-                                <strong>Dibuat:</strong> {{ $layanan->created_at->format('d M Y H:i') }}
-                            </li>
-                            <li>
-                                <strong>Update Terakhir:</strong> {{ $layanan->updated_at->format('d M Y H:i') }}
-                            </li>
+                            <li class="mb-2"><strong>ID:</strong> #{{ $layanan->id }}</li>
+                            <li class="mb-2"><strong>Dibuat:</strong> {{ $layanan->created_at->format('d M Y H:i') }}</li>
+                            <li><strong>Update:</strong> {{ $layanan->updated_at->format('d M Y H:i') }}</li>
                         </ul>
                     </div>
                     <div class="col-md-6">
                         <ul class="list-unstyled mb-0 small">
                             <li class="mb-2">
-                                <strong>Tipe:</strong> 
+                                <strong>Divisi:</strong> 
                                 <span class="badge badge-{{ $layanan->badge_color }}">
-                                    {{ $layanan->layanan_type }}
+                                    {{ $layanan->divisi->nama ?? '-' }}
                                 </span>
                             </li>
-                            <li class="mb-2">
+                            <li>
                                 <strong>Status:</strong> 
                                 <span class="badge badge-{{ $layanan->is_active ? 'success' : 'secondary' }}">
                                     {{ $layanan->is_active ? 'Aktif' : 'Nonaktif' }}
@@ -180,26 +154,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Warning Card -->
-        <div class="card shadow mb-4 border-left-warning">
-            <div class="card-body">
-                <h6 class="font-weight-bold text-warning mb-3">
-                    <i class="fas fa-exclamation-triangle"></i> Perhatian:
-                </h6>
-                <ul class="mb-0 small">
-                    <li class="mb-2">
-                        Perubahan akan langsung mempengaruhi form pengajuan user
-                    </li>
-                    <li class="mb-2">
-                        Jika status diubah jadi nonaktif, layanan tidak muncul di dropdown
-                    </li>
-                    <li>
-                        Pastikan data sudah benar sebelum menyimpan
-                    </li>
-                </ul>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -208,34 +162,19 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-trash"></i> Konfirmasi Hapus
-                </h5>
-                <button type="button" class="close text-white" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+                <h5 class="modal-title"><i class="fas fa-trash"></i> Konfirmasi Hapus</h5>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <div class="modal-body">
-                <p>Apakah Anda yakin ingin menghapus layanan ini?</p>
-                <div class="alert alert-warning mb-3">
-                    <strong>Tipe:</strong> {{ $layanan->layanan_type }}<br>
-                    <strong>Jenis:</strong> {{ $layanan->jenis_layanan }}
-                </div>
-                <p class="text-danger mb-0">
-                    <i class="fas fa-exclamation-triangle"></i> 
-                    <strong>Peringatan:</strong> Data yang dihapus tidak dapat dikembalikan!
-                </p>
+                <p>Yakin ingin menghapus layanan <strong>{{ $layanan->jenis_layanan }}</strong>?</p>
+                <p class="text-danger mb-0"><i class="fas fa-exclamation-triangle"></i> Data yang dihapus tidak dapat dikembalikan!</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                    <i class="fas fa-times"></i> Batal
-                </button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
                 <form action="{{ route('admin.layanan.destroy', $layanan) }}" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash"></i> Ya, Hapus
-                    </button>
+                    <button type="submit" class="btn btn-danger">Ya, Hapus</button>
                 </form>
             </div>
         </div>
@@ -243,62 +182,3 @@
 </div>
 
 @endsection
-
-@push('styles')
-<style>
-.custom-switch-lg .custom-control-label::before {
-    height: 1.5rem;
-    width: calc(2rem + 0.75rem);
-    border-radius: 3rem;
-}
-.custom-switch-lg .custom-control-label::after {
-    width: calc(1.5rem - 4px);
-    height: calc(1.5rem - 4px);
-    border-radius: calc(2rem - (1.5rem / 2));
-}
-.custom-switch-lg .custom-control-input:checked ~ .custom-control-label::after {
-    transform: translateX(calc(1.5rem - 0.25rem));
-}
-</style>
-@endpush
-
-@push('scripts')
-<script>
-$(document).ready(function() {
-    // Character counter
-    const maxLength = 1000;
-    $('#deskripsi').on('input', function() {
-        const length = $(this).val().length;
-        const remaining = maxLength - length;
-        
-        $('#charCounter').text(`${length} / ${maxLength} karakter`);
-        
-        if (remaining < 100) {
-            $('#charCounter').addClass('text-danger').removeClass('text-muted');
-        } else {
-            $('#charCounter').addClass('text-muted').removeClass('text-danger');
-        }
-    });
-    
-    // Trigger on load
-    $('#deskripsi').trigger('input');
-    
-    // Form validation
-    $('#formEditLayanan').on('submit', function(e) {
-        if ($('#layanan_type').val() === '') {
-            e.preventDefault();
-            alert('Tipe Layanan harus dipilih!');
-            $('#layanan_type').focus();
-            return false;
-        }
-        
-        if ($('#jenis_layanan').val().trim() === '') {
-            e.preventDefault();
-            alert('Jenis Layanan harus diisi!');
-            $('#jenis_layanan').focus();
-            return false;
-        }
-    });
-});
-</script>
-@endpush

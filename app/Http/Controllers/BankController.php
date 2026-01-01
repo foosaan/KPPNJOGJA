@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Bank;
 use App\Models\Layanan;
+use App\Models\Divisi;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -12,11 +13,16 @@ class BankController extends Controller
 {
     public function create()
     {
-        // Ambil layanan BANK dari tabel layanans
-        $jenis_layanan = Layanan::where('layanan_type', 'Bank')
-            ->where('is_active', true)
-            ->pluck('jenis_layanan')
-            ->toArray();
+        // Get divisi Bank
+        $divisi = Divisi::where('nama', 'Bank')->first();
+        
+        $jenis_layanan = [];
+        if ($divisi) {
+            $jenis_layanan = Layanan::where('divisi_id', $divisi->id)
+                ->where('is_active', true)
+                ->pluck('jenis_layanan')
+                ->toArray();
+        }
 
         return view('user.layanan-bank.create', [
             'jenis_layanan' => $jenis_layanan,

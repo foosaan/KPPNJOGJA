@@ -62,152 +62,132 @@
         </div>
     </div>
 
-    {{-- Tabs Data Akun --}}
+    {{-- Tabs Daftar Berkas Masuk --}}
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">Data Akun</h6>
-            <input type="text" id="searchInput" class="form-control w-25" placeholder="Cari nama atau email...">
+            <h6 class="m-0 font-weight-bold text-primary">Daftar Berkas Masuk</h6>
+            <input type="text" id="searchInput" class="form-control w-25" placeholder="Cari no berkas atau layanan...">
         </div>
         <div class="card-body">
-            <ul class="nav nav-tabs" id="accountTabs" role="tablist">
+            <ul class="nav nav-tabs" id="berkasTab" role="tablist">
                 <li class="nav-item">
                     <a class="nav-link active" id="all-tab" data-toggle="tab" href="#all" role="tab">Semua</a>
                 </li>
+                @foreach($divisis as $divisi)
                 <li class="nav-item">
-                    <a class="nav-link" id="admin-tab" data-toggle="tab" href="#admins" role="tab">Admin</a>
+                    <a class="nav-link" id="{{ $divisi->slug }}-tab" data-toggle="tab" href="#{{ $divisi->slug }}" role="tab">{{ $divisi->nama }}</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="staff-tab" data-toggle="tab" href="#staffs" role="tab">Staff</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="user-tab" data-toggle="tab" href="#users" role="tab">User</a>
-                </li>
+                @endforeach
             </ul>
 
-            <div class="tab-content mt-3" id="accountTabsContent">
-                {{-- Semua --}}
+            <div class="tab-content mt-3" id="berkasTabContent">
+                {{-- Semua Berkas --}}
                 <div class="tab-pane fade show active" id="all" role="tabpanel">
-                    <table class="table table-bordered account-table">
+                    <table class="table table-bordered berkas-table">
                         <thead>
                             <tr>
-                                <th>Nama</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Dibuat</th>
+                                <th>No Berkas</th>
+                                <th>Jenis Layanan</th>
+                                <th>Divisi</th>
+                                <th>Staff Pemroses</th>
+                                <th>Status</th>
+                                <th>Tanggal</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($allAccounts as $account)
+                            @forelse($allBerkas as $berkas)
                                 <tr>
-                                    <td>{{ $account->name }}</td>
-                                    <td>{{ $account->email }}</td>
-                                    <td>{{ $account->account_type ?? ucfirst($account->role) }}</td>
-                                    <td>{{ $account->created_at->format('d/m/Y H:i') }}</td>
+                                    <td>{{ $berkas->no_berkas }}</td>
+                                    <td>{{ $berkas->jenis_layanan }}</td>
+                                    <td><span class="badge badge-info">{{ $berkas->divisi_nama }}</span></td>
+                                    <td>{{ $berkas->staff->name ?? '-' }}</td>
+                                    <td>
+                                        @if($berkas->status == 'baru')
+                                            <span class="badge badge-warning">Baru</span>
+                                        @elseif($berkas->status == 'diproses')
+                                            <span class="badge badge-primary">Diproses</span>
+                                        @elseif($berkas->status == 'selesai')
+                                            <span class="badge badge-success">Selesai</span>
+                                        @elseif($berkas->status == 'ditolak')
+                                            <span class="badge badge-danger">Ditolak</span>
+                                        @else
+                                            <span class="badge badge-secondary">{{ $berkas->status ?? '-' }}</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $berkas->created_at->format('d/m/Y H:i') }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center">Tidak ada data</td>
+                                    <td colspan="6" class="text-center">Tidak ada berkas</td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
 
-                {{-- Admin --}}
-                <div class="tab-pane fade" id="admins" role="tabpanel">
-                    <table class="table table-bordered account-table">
+                {{-- Dynamic Divisi Tabs --}}
+                @foreach($divisis as $divisi)
+                <div class="tab-pane fade" id="{{ $divisi->slug }}" role="tabpanel">
+                    <table class="table table-bordered berkas-table">
                         <thead>
                             <tr>
-                                <th>Nama</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Dibuat</th>
+                                <th>No Berkas</th>
+                                <th>Jenis Layanan</th>
+                                <th>Staff Pemroses</th>
+                                <th>Status</th>
+                                <th>Tanggal</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($admins as $account)
+                            @forelse($berkasByDivisi[$divisi->slug] ?? [] as $berkas)
                                 <tr>
-                                    <td>{{ $account->name }}</td>
-                                    <td>{{ $account->email }}</td>
-                                    <td>{{ $account->account_type ?? 'Admin' }}</td>
-                                    <td>{{ $account->created_at->format('d/m/Y H:i') }}</td>
+                                    <td>{{ $berkas->no_berkas }}</td>
+                                    <td>{{ $berkas->jenis_layanan }}</td>
+                                    <td>{{ $berkas->staff->name ?? '-' }}</td>
+                                    <td>
+                                        @if($berkas->status == 'baru')
+                                            <span class="badge badge-warning">Baru</span>
+                                        @elseif($berkas->status == 'diproses')
+                                            <span class="badge badge-primary">Diproses</span>
+                                        @elseif($berkas->status == 'selesai')
+                                            <span class="badge badge-success">Selesai</span>
+                                        @elseif($berkas->status == 'ditolak')
+                                            <span class="badge badge-danger">Ditolak</span>
+                                        @else
+                                            <span class="badge badge-secondary">{{ $berkas->status ?? '-' }}</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $berkas->created_at->format('d/m/Y H:i') }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center">Tidak ada data</td>
+                                    <td colspan="5" class="text-center">Tidak ada berkas</td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-
-                {{-- Staff --}}
-                <div class="tab-pane fade" id="staffs" role="tabpanel">
-                    <table class="table table-bordered account-table">
-                        <thead>
-                            <tr>
-                                <th>Nama</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Dibuat</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($staffs as $account)
-                                <tr>
-                                    <td>{{ $account->name }}</td>
-                                    <td>{{ $account->email }}</td>
-                                    <td>{{ $account->account_type ?? 'Staff' }}</td>
-                                    <td>{{ $account->created_at->format('d/m/Y H:i') }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="text-center">Tidak ada data</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                {{-- User --}}
-                <div class="tab-pane fade" id="users" role="tabpanel">
-                    <table class="table table-bordered account-table">
-                        <thead>
-                            <tr>
-                                <th>Nama</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Dibuat</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($users as $account)
-                                <tr>
-                                    <td>{{ $account->name }}</td>
-                                    <td>{{ $account->email }}</td>
-                                    <td>{{ $account->account_type ?? 'User' }}</td>
-                                    <td>{{ $account->created_at->format('d/m/Y H:i') }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="text-center">Tidak ada data</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                @endforeach
             </div>
         </div>
     </div>
 
     {{-- Script Realtime Search --}}
-    <script>
-        document.getElementById('searchInput').addEventListener('keyup', function() {
-            let value = this.value.toLowerCase();
-            document.querySelectorAll('.account-table tbody tr').forEach(row => {
-                let text = row.textContent.toLowerCase();
-                row.style.display = text.includes(value) ? '' : 'none';
-            });
-        });
-    </script>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                let value = this.value.toLowerCase();
+                document.querySelectorAll('.berkas-table tbody tr').forEach(row => {
+                    let text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(value) ? '' : 'none';
+                });
+            });
+        }
+    });
+</script>
+@endpush

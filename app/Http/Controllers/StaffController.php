@@ -8,6 +8,8 @@ use App\Models\LayananPd;
 use App\Models\Mski;
 use App\Models\Bank;
 use App\Models\Umum;
+use App\Models\BerkasLayanan;
+use App\Models\Divisi;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -28,13 +30,21 @@ class StaffController extends Controller
         $bankRequests->each(fn($r) => $r->layanan_type = 'BANK');
         $umumRequests->each(fn($r) => $r->layanan_type = 'UMUM');
 
+        // Include berkas from berkas_layanans table
+        $berkasGenerik = BerkasLayanan::with('divisi')->latest()->get();
+        $berkasGenerik->each(function($r) {
+            $r->layanan_type = strtoupper($r->divisi->nama ?? 'UNKNOWN');
+        });
 
         $allRequests = $veraRequests->concat($pdRequests)
             ->concat($mskiRequests)
             ->concat($bankRequests)
-            ->concat($umumRequests);
+            ->concat($umumRequests)
+            ->concat($berkasGenerik)
+            ->sortByDesc('created_at')
+            ->values();
 
-        $perPage = 15; //mengatur jumlah table yang di munculkan
+        $perPage = 15;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
         $currentItems = $allRequests->slice(($currentPage - 1) * $perPage, $perPage)->values();
 
@@ -46,11 +56,30 @@ class StaffController extends Controller
             ['path' => request()->url(), 'query' => request()->query()]
         );
 
-        $veraCount = Vera::count();
-        $pdCount = LayananPd::count();
-        $mskiCount = Mski::count();
-        $bankCount = Bank::count();
-        $umumCount = Umum::count();
+        // Get all active divisi for stats
+        $divisis = Divisi::where('is_active', true)->orderBy('nama')->get();
+        
+        // Calculate stats per divisi
+        $divisiStats = [];
+        foreach ($divisis as $divisi) {
+            $count = 0;
+            $slug = strtolower($divisi->nama);
+            
+            // Count from legacy tables
+            if ($slug === 'vera') $count = Vera::count();
+            elseif ($slug === 'pd') $count = LayananPd::count();
+            elseif ($slug === 'mski') $count = Mski::count();
+            elseif ($slug === 'bank') $count = Bank::count();
+            elseif ($slug === 'umum') $count = Umum::count();
+            
+            // Add count from berkas_layanans
+            $count += BerkasLayanan::where('divisi_id', $divisi->id)->count();
+            
+            $divisiStats[$divisi->slug] = [
+                'nama' => $divisi->nama,
+                'count' => $count,
+            ];
+        }
 
         $tahunList = $allRequests->pluck('created_at')
             ->map(fn($date) => $date->format('Y'))
@@ -59,19 +88,11 @@ class StaffController extends Controller
             ->values();
 
         return view('staff.dashboard', compact(
-            'veraCount',
-            'pdCount',
-            'mskiCount',
-            'bankCount',
-            'umumCount',
+            'divisiStats',
             'paginatedRequests',
             'allRequests',
-            'veraRequests',
-            'pdRequests',
-            'mskiRequests',
-            'bankRequests',
-            'umumRequests',
-            'tahunList'
+            'tahunList',
+            'divisis'
         ));
     }
 
@@ -80,13 +101,37 @@ class StaffController extends Controller
     {
         $divisi = strtoupper(Auth::user()->divisi);
 
+        // Legacy tables - set layanan_type for each
         $veraRequests = $divisi === 'VERA' ? Vera::latest()->get() : collect();
+        $veraRequests->each(fn($r) => $r->layanan_type = 'vera');
+        
         $pdRequests = $divisi === 'PD' ? LayananPd::latest()->get() : collect();
+        $pdRequests->each(fn($r) => $r->layanan_type = 'pd');
+        
         $mskiRequests = $divisi === 'MSKI' ? Mski::latest()->get() : collect();
+        $mskiRequests->each(fn($r) => $r->layanan_type = 'mski');
+        
         $bankRequests = $divisi === 'BANK' ? Bank::latest()->get() : collect();
+        $bankRequests->each(fn($r) => $r->layanan_type = 'bank');
+        
         $umumRequests = $divisi === 'UMUM' ? Umum::latest()->get() : collect();
+        $umumRequests->each(fn($r) => $r->layanan_type = 'umum');
 
-        $allRequests = $veraRequests->concat($pdRequests)->concat($mskiRequests)->concat($bankRequests)->concat(($umumRequests));
+        // Berkas from berkas_layanans for this staff's divisi
+        $divisiModel = Divisi::whereRaw('LOWER(nama) = ?', [strtolower(Auth::user()->divisi)])->first();
+        $berkasGenerik = collect();
+        if ($divisiModel) {
+            $berkasGenerik = BerkasLayanan::where('divisi_id', $divisiModel->id)->latest()->get();
+            $berkasGenerik->each(fn($r) => $r->layanan_type = 'generik');
+        }
+
+        $allRequests = $veraRequests->concat($pdRequests)
+            ->concat($mskiRequests)
+            ->concat($bankRequests)
+            ->concat($umumRequests)
+            ->concat($berkasGenerik)
+            ->sortByDesc('created_at')
+            ->values();
 
         $tahunList = $allRequests->pluck('created_at')
             ->map(fn($date) => $date->format('Y'))
@@ -100,6 +145,7 @@ class StaffController extends Controller
             'mskiRequests',
             'bankRequests',
             'umumRequests',
+            'berkasGenerik',
             'allRequests',
             'tahunList'
         ));
@@ -113,29 +159,45 @@ class StaffController extends Controller
             'alasan_penolakan' => 'nullable|string|max:255',
         ]);
 
-        // Tentukan model berdasarkan jenis layanan
-        switch (strtolower($layanan_type)) {
-            case 'vera':
-                $requestData = Vera::findOrFail($id);
-                break;
-            case 'pd':
-                $requestData = LayananPd::findOrFail($id);
-                break;
-            case 'mski':
-                $requestData = Mski::findOrFail($id);
-                break;
-            case 'bank':
-                $requestData = Bank::findOrFail($id);
-                break;
-            case 'umum':
-                $requestData = Umum::findOrFail($id);
-                break;
+        $requestData = null;
 
-            default:
-                return redirect()->back()->with('error', 'Jenis layanan tidak valid.');
+        // SELALU cek berkas_layanans dulu (karena form baru submit ke sini)
+        if (strtolower($layanan_type) === 'generik') {
+            $requestData = BerkasLayanan::find($id);
+        } else {
+            // Cek di berkas_layanans dulu
+            $requestData = BerkasLayanan::find($id);
+            
+            // Jika tidak ditemukan, cari di tabel legacy
+            if (!$requestData) {
+                switch (strtolower($layanan_type)) {
+                    case 'vera':
+                        $requestData = Vera::find($id);
+                        break;
+                    case 'pd':
+                        $requestData = LayananPd::find($id);
+                        break;
+                    case 'mski':
+                        $requestData = Mski::find($id);
+                        break;
+                    case 'bank':
+                        $requestData = Bank::find($id);
+                        break;
+                    case 'umum':
+                        $requestData = Umum::find($id);
+                        break;
+                }
+            }
+        }
+
+        if (!$requestData) {
+            return redirect()->back()->with('error', 'Data tidak ditemukan.');
         }
 
         $requestData->status = $request->status;
+        
+        // Assign staff yang memproses berkas
+        $requestData->staff_id = Auth::id();
 
         if ($request->status === 'ditolak') {
             $requestData->alasan_penolakan = $request->alasan_penolakan;
@@ -154,17 +216,46 @@ class StaffController extends Controller
         $divisi = strtoupper(Auth::user()->divisi);
 
         $veraRequests = $divisi === 'VERA' ? Vera::where('status', 'diproses')->latest()->get() : collect();
+        $veraRequests->each(fn($r) => $r->layanan_type = 'vera');
+        
         $pdRequests = $divisi === 'PD' ? LayananPd::where('status', 'diproses')->latest()->get() : collect();
+        $pdRequests->each(fn($r) => $r->layanan_type = 'pd');
+        
         $mskiRequests = $divisi === 'MSKI' ? Mski::where('status', 'diproses')->latest()->get() : collect();
+        $mskiRequests->each(fn($r) => $r->layanan_type = 'mski');
+        
         $bankRequests = $divisi === 'BANK' ? Bank::where('status', 'diproses')->latest()->get() : collect();
+        $bankRequests->each(fn($r) => $r->layanan_type = 'bank');
+        
         $umumRequests = $divisi === 'UMUM' ? Umum::where('status', 'diproses')->latest()->get() : collect();
+        $umumRequests->each(fn($r) => $r->layanan_type = 'umum');
+
+        // Berkas from berkas_layanans for this staff's divisi
+        $divisiModel = Divisi::whereRaw('LOWER(nama) = ?', [strtolower(Auth::user()->divisi)])->first();
+        $berkasGenerik = collect();
+        if ($divisiModel) {
+            $berkasGenerik = BerkasLayanan::where('divisi_id', $divisiModel->id)
+                ->where('status', 'diproses')
+                ->latest()->get();
+            $berkasGenerik->each(fn($r) => $r->layanan_type = 'generik');
+        }
+
+        $allRequests = $veraRequests->concat($pdRequests)
+            ->concat($mskiRequests)
+            ->concat($bankRequests)
+            ->concat($umumRequests)
+            ->concat($berkasGenerik)
+            ->sortByDesc('created_at')
+            ->values();
 
         return view('staff.berkasproses', compact(
             'veraRequests',
             'pdRequests',
             'mskiRequests',
             'bankRequests',
-            'umumRequests'
+            'umumRequests',
+            'berkasGenerik',
+            'allRequests'
         ));
     }
 
@@ -174,17 +265,46 @@ class StaffController extends Controller
         $divisi = strtoupper(Auth::user()->divisi);
 
         $veraRequests = $divisi === 'VERA' ? Vera::where('status', 'selesai')->latest()->get() : collect();
+        $veraRequests->each(fn($r) => $r->layanan_type = 'vera');
+        
         $pdRequests = $divisi === 'PD' ? LayananPd::where('status', 'selesai')->latest()->get() : collect();
+        $pdRequests->each(fn($r) => $r->layanan_type = 'pd');
+        
         $mskiRequests = $divisi === 'MSKI' ? Mski::where('status', 'selesai')->latest()->get() : collect();
+        $mskiRequests->each(fn($r) => $r->layanan_type = 'mski');
+        
         $bankRequests = $divisi === 'BANK' ? Bank::where('status', 'selesai')->latest()->get() : collect();
+        $bankRequests->each(fn($r) => $r->layanan_type = 'bank');
+        
         $umumRequests = $divisi === 'UMUM' ? Umum::where('status', 'selesai')->latest()->get() : collect();
+        $umumRequests->each(fn($r) => $r->layanan_type = 'umum');
+
+        // Berkas from berkas_layanans for this staff's divisi
+        $divisiModel = Divisi::whereRaw('LOWER(nama) = ?', [strtolower(Auth::user()->divisi)])->first();
+        $berkasGenerik = collect();
+        if ($divisiModel) {
+            $berkasGenerik = BerkasLayanan::where('divisi_id', $divisiModel->id)
+                ->where('status', 'selesai')
+                ->latest()->get();
+            $berkasGenerik->each(fn($r) => $r->layanan_type = 'generik');
+        }
+
+        $allRequests = $veraRequests->concat($pdRequests)
+            ->concat($mskiRequests)
+            ->concat($bankRequests)
+            ->concat($umumRequests)
+            ->concat($berkasGenerik)
+            ->sortByDesc('created_at')
+            ->values();
 
         return view('staff.berkasselesai', compact(
             'veraRequests',
             'pdRequests',
             'mskiRequests',
             'bankRequests',
-            'umumRequests'
+            'umumRequests',
+            'berkasGenerik',
+            'allRequests'
         ));
     }
 
@@ -194,77 +314,115 @@ class StaffController extends Controller
         $divisi = strtoupper(Auth::user()->divisi);
 
         $veraRequests = $divisi === 'VERA' ? Vera::where('status', 'ditolak')->latest()->get() : collect();
+        $veraRequests->each(fn($r) => $r->layanan_type = 'vera');
+        
         $pdRequests = $divisi === 'PD' ? LayananPd::where('status', 'ditolak')->latest()->get() : collect();
+        $pdRequests->each(fn($r) => $r->layanan_type = 'pd');
+        
         $mskiRequests = $divisi === 'MSKI' ? Mski::where('status', 'ditolak')->latest()->get() : collect();
+        $mskiRequests->each(fn($r) => $r->layanan_type = 'mski');
+        
         $bankRequests = $divisi === 'BANK' ? Bank::where('status', 'ditolak')->latest()->get() : collect();
+        $bankRequests->each(fn($r) => $r->layanan_type = 'bank');
+        
         $umumRequests = $divisi === 'UMUM' ? Umum::where('status', 'ditolak')->latest()->get() : collect();
+        $umumRequests->each(fn($r) => $r->layanan_type = 'umum');
+
+        // Berkas from berkas_layanans for this staff's divisi
+        $divisiModel = Divisi::whereRaw('LOWER(nama) = ?', [strtolower(Auth::user()->divisi)])->first();
+        $berkasGenerik = collect();
+        if ($divisiModel) {
+            $berkasGenerik = BerkasLayanan::where('divisi_id', $divisiModel->id)
+                ->where('status', 'ditolak')
+                ->latest()->get();
+            $berkasGenerik->each(fn($r) => $r->layanan_type = 'generik');
+        }
+
+        $allRequests = $veraRequests->concat($pdRequests)
+            ->concat($mskiRequests)
+            ->concat($bankRequests)
+            ->concat($umumRequests)
+            ->concat($berkasGenerik)
+            ->sortByDesc('created_at')
+            ->values();
 
         return view('staff.berkasditolak', compact(
             'veraRequests',
             'pdRequests',
             'mskiRequests',
             'bankRequests',
-            'umumRequests'
+            'umumRequests',
+            'berkasGenerik',
+            'allRequests'
         ));
     }
 
    public function updateFeedback(Request $request, $id)
-{
-    // Divisi staff yang login
-    $divisi = strtoupper(Auth::user()->divisi);
+    {
+        // Divisi staff yang login
+        $divisi = strtoupper(Auth::user()->divisi);
 
-    // Validasi (feedback wajib, file opsional)
-    $validated = $request->validate([
-        'feedback' => 'required|string|max:500',
-        'feedback_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:2048',
-    ]);
+        // Validasi (feedback wajib, file opsional)
+        $validated = $request->validate([
+            'feedback' => 'required|string|max:500',
+            'feedback_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:2048',
+        ]);
 
-    // Tentukan model dan pesan sukses
-    switch ($divisi) {
-        case 'UMUM':
-            $model = Umum::class;
-            $successMessage = 'Feedback berhasil disimpan untuk layanan UMUM.';
-            break;
-        case 'BANK':
-            $model = Bank::class;
-            $successMessage = 'Feedback berhasil disimpan untuk layanan BANK.';
-            break;
-        case 'VERA':
-            $model = Vera::class;
-            $successMessage = 'Feedback berhasil disimpan untuk layanan VERA.';
-            break;
-        case 'PD':
-            $model = LayananPd::class;
-            $successMessage = 'Feedback berhasil disimpan untuk layanan PD.';
-            break;
-        case 'MSKI':
-            $model = Mski::class;
-            $successMessage = 'Feedback berhasil disimpan untuk layanan MSKI.';
-            break;
-        default:
-            return redirect()->back()->with('error', 'Anda tidak diizinkan memberikan feedback untuk divisi ini.');
+        // SELALU cari di berkas_layanans dulu (karena form baru submit ke sini)
+        $data = BerkasLayanan::find($id);
+        $successMessage = 'Feedback berhasil disimpan.';
+
+        // Jika tidak ditemukan, coba di tabel legacy berdasarkan divisi staff
+        if (!$data) {
+            $legacyDivisi = ['UMUM', 'BANK', 'VERA', 'PD', 'MSKI'];
+            
+            if (in_array($divisi, $legacyDivisi)) {
+                switch ($divisi) {
+                    case 'UMUM':
+                        $data = Umum::find($id);
+                        $successMessage = 'Feedback berhasil disimpan untuk layanan UMUM.';
+                        break;
+                    case 'BANK':
+                        $data = Bank::find($id);
+                        $successMessage = 'Feedback berhasil disimpan untuk layanan BANK.';
+                        break;
+                    case 'VERA':
+                        $data = Vera::find($id);
+                        $successMessage = 'Feedback berhasil disimpan untuk layanan VERA.';
+                        break;
+                    case 'PD':
+                        $data = LayananPd::find($id);
+                        $successMessage = 'Feedback berhasil disimpan untuk layanan PD.';
+                        break;
+                    case 'MSKI':
+                        $data = Mski::find($id);
+                        $successMessage = 'Feedback berhasil disimpan untuk layanan MSKI.';
+                        break;
+                }
+            }
+        }
+
+        if (!$data) {
+            return redirect()->back()->with('error', 'Data tidak ditemukan.');
+        }
+
+        // Simpan file jika ada, dengan format nama khusus
+        if ($request->hasFile('feedback_file')) {
+            $file = $request->file('feedback_file');
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $extension = $file->getClientOriginalExtension();
+
+            $today = now()->format('Ymd');
+            $newFileName = "{$divisi}-{$today}-{$originalName}.{$extension}";
+
+            $filePath = $file->storeAs('feedback', $newFileName, 'public');
+            $data->feedback_file = $filePath;
+        }
+
+        $data->feedback = $validated['feedback'];
+        $data->staff_id = Auth::id();
+        $data->save();
+
+        return redirect()->back()->with('success', $successMessage);
     }
-
-    // Ambil data berdasarkan model dan id
-    $data = $model::findOrFail($id);
-
-    // Simpan file jika ada, dengan format nama khusus
-    if ($request->hasFile('feedback_file')) {
-        $file = $request->file('feedback_file');
-        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $extension = $file->getClientOriginalExtension();
-
-        $today = now()->format('Ymd'); // format YYYYMMDD
-        $newFileName = "{$divisi}-{$today}-{$originalName}.{$extension}";
-
-        $filePath = $file->storeAs('feedback', $newFileName, 'public');
-        $data->feedback_file = $filePath;
-    }
-
-    $data->feedback = $validated['feedback'];
-    $data->save();
-
-    return redirect()->back()->with('success', $successMessage);
-}
-
 }
