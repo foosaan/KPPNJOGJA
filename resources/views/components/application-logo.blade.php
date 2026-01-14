@@ -1,1 +1,0 @@
-<img src="{{ asset('template/img/logoKPPN.png') }}" alt="Logo" class="h-6 w-auto max-h-8">
