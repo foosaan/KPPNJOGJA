@@ -8,11 +8,7 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminStaffController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\VeraController;
-use App\Http\Controllers\MskiController;
-use App\Http\Controllers\PdController;
-use App\Http\Controllers\BankController;
-use App\Http\Controllers\UmumController;
+
 use App\Http\Controllers\KelolaLayananController;
 use App\Http\Controllers\DivisiController;
 
@@ -129,27 +125,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:user')->group(function () {
         Route::get('/user/dashboard', [UserController::class, 'dashboard'])->name('user.dashboard');
 
-        // Layanan Vera (legacy)
-        Route::get('/user/layanan-vera/create', [VeraController::class, 'create'])->name('vera.create');
-        Route::post('/user/layanan-vera', [VeraController::class, 'store'])->name('vera.store');
-
-        // Layanan MSKI (legacy)
-        Route::get('/user/layanan-mski/create', [MskiController::class, 'create'])->name('mski.create');
-        Route::post('/user/layanan-mski', [MskiController::class, 'store'])->name('mski.store');
-
-        // Layanan PD (legacy)
-        Route::get('/user/layanan-pd/create', [PdController::class, 'create'])->name('pd.create');
-        Route::post('/user/layanan-pd', [PdController::class, 'store'])->name('pd.store');
-
-        // Layanan Bank (legacy)
-        Route::get('/user/layanan-bank/create', [BankController::class, 'create'])->name('bank.create');
-        Route::post('/user/layanan-bank', [BankController::class, 'store'])->name('bank.store');
-
-        // Layanan Umum (legacy)
-        Route::get('/user/layanan-umum/create', [UmumController::class, 'create'])->name('umum.create');
-        Route::post('/user/layanan-umum', [UmumController::class, 'store'])->name('umum.store');
-
-        // Dynamic Layanan Routes (new)
+        // Dynamic Layanan Routes (unified system)
         Route::get('/user/layanan/{slug}', [\App\Http\Controllers\LayananGenerikController::class, 'create'])->name('layanan.generik.create');
         Route::post('/user/layanan/{slug}', [\App\Http\Controllers\LayananGenerikController::class, 'store'])->name('layanan.generik.store');
     });
