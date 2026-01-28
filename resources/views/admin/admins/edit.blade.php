@@ -1,4 +1,4 @@
-@extends('admin.app')
+@extends('layouts.admin.app')
 
 @section('content')
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -41,7 +41,7 @@
 
         <div class="mb-3">
             <label class="form-label">NIP</label>
-            <input type="text" name="nip" class="form-control" value="{{ old('nip', $admin->nip) }}">
+            <input type="text" name="nip" class="form-control" value="{{ old('nip', $admin->nip) }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             @error('nip') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 

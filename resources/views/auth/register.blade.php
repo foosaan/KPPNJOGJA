@@ -48,7 +48,7 @@
                                         {{-- NIP --}}
                                         <div class="form-group">
                                             <input type="text" name="nip" class="form-control form-control-user"
-                                                value="{{ old('nip') }}" placeholder="NIP">
+                                                value="{{ old('nip') }}" placeholder="NIP" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                             @error('nip')
                                                 <small class="text-danger">{{ $message }}</small>
                                             @enderror

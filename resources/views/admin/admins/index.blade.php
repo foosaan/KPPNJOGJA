@@ -1,4 +1,4 @@
-@extends('admin.app')
+@extends('layouts.admin.app')
 
 @section('content')
     <!-- BAGIAN DASHBOARD YANG TIDAK DIUBAH -->
@@ -117,47 +117,5 @@
         </div>
     </div>
 
-    <style>
-        .table-hover tbody tr:hover {
-            background-color: #f8f9ff !important;
-        }
 
-        .btn:hover {
-            transform: translateY(-1px);
-            transition: all 0.2s ease;
-        }
-
-        .card {
-            border: none;
-            border-radius: 8px;
-        }
-
-        .breadcrumb {
-            background-color: transparent;
-            padding: 0;
-            margin-bottom: 0;
-        }
-
-        .breadcrumb-item+.breadcrumb-item::before {
-            content: "/" !important;
-            color: #6c757d;
-        }
-
-        @media (max-width: 768px) {
-            .table-responsive {
-                font-size: 14px;
-            }
-
-            .btn-group {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-            }
-
-            th,
-            td {
-                padding: 10px 8px !important;
-            }
-        }
-    </style>
 @endsection

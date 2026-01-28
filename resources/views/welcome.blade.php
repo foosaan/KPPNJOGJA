@@ -22,30 +22,16 @@
 <body class="antialiased">
     <div class="min-h-screen relative overflow-hidden">
         <!-- Background Image -->
+        <!-- Background Video -->
         <div class="absolute inset-0 z-0">
-            <div id="hero-slider" class="relative w-full h-full">
-                <img src="{{ asset('template/img/BG/aji07039-min.jpg') }}" alt="Background 1" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-100">
-                <img src="{{ asset('template/img/BG/AJI07039.jpg') }}" alt="Background 2" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-0">
-                <img src="{{ asset('template/img/BG/whatsapp-image-2023-08-15-at-10.50.40.jpeg') }}" alt="Background 3" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-0">
-            </div>
+            <video autoplay muted loop playsinline poster="{{ asset('template/img/BG/aji07039-min.jpg') }}" class="absolute inset-0 w-full h-full object-cover">
+                <source src="{{ asset('template/video/background.mp4') }}" type="video/mp4">
+            </video>
             <!-- Overlay untuk readability -->
             <div class="absolute inset-0 bg-black/60"></div>
         </div>
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const slides = document.querySelectorAll('#hero-slider img');
-                let currentSlide = 0;
-                
-                setInterval(() => {
-                    slides[currentSlide].classList.remove('opacity-100');
-                    slides[currentSlide].classList.add('opacity-0');
-                    currentSlide = (currentSlide + 1) % slides.length;
-                    slides[currentSlide].classList.remove('opacity-0');
-                    slides[currentSlide].classList.add('opacity-100');
-                }, 5000);
-            });
-        </script>
+        <!-- Script removed as it controlled the image slider -->
 
         <!-- Content -->
         <div class="relative z-10 flex flex-col min-h-screen">
@@ -61,7 +47,7 @@
                         </div>
                         <div class="text-white">
                             <h1 class="text-xl font-bold">KPPN Yogyakarta</h1>
-                            <p class="text-sm text-gray-200">Kantor Pelayanan Perbendaharaan Negara</p>
+                            <p class= "text-sm text-gray-200">Kantor Pelayanan Perbendaharaan Negara</p>
                         </div>
                     </div>
 

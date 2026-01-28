@@ -37,7 +37,7 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-semibold">NIP</label>
-                    <input name="nip" type="text" class="form-control" value="{{ old('nip', $user->nip) }}">
+                    <input name="nip" type="text" class="form-control" value="{{ old('nip', $user->nip) }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                     @error('nip') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
 
@@ -103,9 +103,5 @@
 
 </div>
 
-<style>
-    .form-label {
-        color: #6c757d;
-    }
-</style>
+
 @endsection

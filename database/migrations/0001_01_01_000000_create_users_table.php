@@ -7,6 +7,12 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     /**
      * Run the migrations.
+     * Membuat tabel 'users' untuk menyimpan data pengguna aplikasi.
+     * Kolom penting:
+     * - name: Nama lengkap
+     * - email: Alamat email (unik)
+     * - role: Peran user (admin/staff/user)
+     * - nip: Nomor Induk Pegawai (untuk user/staff)
      */
     public function up(): void
     {

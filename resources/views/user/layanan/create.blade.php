@@ -1,4 +1,4 @@
-@extends('user.app')
+@extends('layouts.user.app')
 
 @section('content')
     <div class="container py-5">
@@ -13,6 +13,7 @@
                     </div>
 
                     <div class="card-body">
+                        <!-- Cek apakah ada pesan 'success' yang dibawa dari Controller? -->
                         @if(session('success'))
                             <div class="alert alert-success alert-dismissible fade show">
                                 <i class="fas fa-check-circle"></i> {{ session('success') }}
@@ -39,8 +40,11 @@
                                 <br>Silakan hubungi admin untuk menambahkan layanan.
                             </div>
                         @else
+                            <!-- 
+                                action: Tujuan pengiriman data. 
+                            -->
                             <form action="{{ route('layanan.generik.store', $divisi->slug) }}" method="POST" enctype="multipart/form-data">
-                                @csrf
+                                @csrf <!-- Token keamanan wajib Laravel -->
 
                                 <div class="mb-3">
                                     <label class="form-label">No Berkas</label>

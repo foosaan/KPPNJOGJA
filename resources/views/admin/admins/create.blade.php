@@ -1,4 +1,4 @@
-@extends('admin.app')
+@extends('layouts.admin.app')
 
 @section('content')
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -40,7 +40,7 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-semibold">NIP</label>
-                    <input name="nip" type="text" class="form-control" placeholder="NIP" value="{{ old('nip') }}">
+                    <input name="nip" type="text" class="form-control" placeholder="NIP" value="{{ old('nip') }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                     @error('nip') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
 
@@ -64,38 +64,5 @@
     </div>
 </div>
 
-<style>
-    .form-label {
-        color: #6c757d;
-    }
 
-    .btn-success {
-        background-color: #28a745;
-        border: none;
-    }
-
-    .btn-success:hover {
-        background-color: #218838;
-    }
-
-    .btn-secondary {
-        background-color: #6c757d;
-        border: none;
-    }
-
-    .btn-secondary:hover {
-        background-color: #5a6268;
-    }
-
-    .breadcrumb {
-        background-color: transparent;
-        padding: 0;
-        margin-bottom: 0;
-    }
-
-    .breadcrumb-item+.breadcrumb-item::before {
-        content: "/";
-        color: #6c757d;
-    }
-</style>
 @endsection

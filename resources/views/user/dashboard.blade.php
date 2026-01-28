@@ -1,4 +1,4 @@
-@extends('user.app')
+@extends('layouts.user.app')
 
 @section('content')
     <div class="container">
@@ -32,6 +32,14 @@
         <h2 class="mb-4">Dashboard Layanan</h2>
 
         <!-- Filter -->
+        {{-- 
+            SECTION FILTER LENGKAP:
+            User dapat memfilter data berdasarkan:
+            1. Status (Baru/Proses/Ditolak)
+            2. Bulan & Tahun pembuatan berkas
+            3. Pencarian Teks (No Berkas)
+            Logic ini dijalankan oleh Script JS di bawah (Client-Side).
+        --}}
         <div class="row mb-3">
             <div class="col-md-3">
                 <select class="form-control" id="filterStatus">

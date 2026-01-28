@@ -1,4 +1,4 @@
-@extends('user.app')
+@extends('layouts.user.app')
 
 @section('content')
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -30,7 +30,7 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-semibold">NIP</label>
-                    <input name="nip" type="text" class="form-control" value="{{ old('nip', $user->nip) }}">
+                    <input name="nip" type="text" class="form-control" value="{{ old('nip', $user->nip) }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                     @error('nip') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
 

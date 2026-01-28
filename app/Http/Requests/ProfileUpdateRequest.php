@@ -24,7 +24,7 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
-            'nip' => ['nullable', 'string', 'max:50'],
+            'nip' => ['nullable', 'string', 'numeric', 'max:50'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ];
     }

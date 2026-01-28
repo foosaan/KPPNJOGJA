@@ -1,4 +1,4 @@
-@extends('admin.app')
+@extends('layouts.admin.app')
 
 @section('content')
 <h1 class="h3 mb-4 text-gray-800">Tambah Akun User</h1>
@@ -26,7 +26,7 @@
 
     <div class="mb-3">
         <label>NIP</label>
-        <input type="text" name="nip" class="form-control" required value="{{ old('nip') }}">
+        <input type="text" name="nip" class="form-control" required value="{{ old('nip') }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
     </div>
 
     <div class="mb-3">

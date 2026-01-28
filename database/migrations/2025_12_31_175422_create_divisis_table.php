@@ -9,6 +9,13 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
+    /**
+     * Run the migrations.
+     * Membuat tabel 'divisis' untuk menyimpan data divisi/unit kerja.
+     * Kolom penting:
+     * - nama: Nama Divisi (unik)
+     * - is_active: Status aktif/nonaktif
+     */
     public function up(): void
     {
         Schema::create('divisis', function (Blueprint $table) {

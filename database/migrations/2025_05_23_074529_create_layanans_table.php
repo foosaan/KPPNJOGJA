@@ -9,6 +9,11 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
+    /**
+     * Run the migrations.
+     * Membuat tabel 'layanans' untuk daftar jenis layanan per divisi.
+     * NOTE: Struktur awal, kolom detail ditambahkan di migration selanjutnya.
+     */
     public function up(): void
     {
         Schema::create('layanans', function (Blueprint $table) {

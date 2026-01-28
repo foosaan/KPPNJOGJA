@@ -46,8 +46,12 @@ class ProfileController extends Controller
     // ===== USER PROFILE =====
     public function editUserProfile(Request $request): View
     {
+        // Get active divisions for sidebar
+        $divisis = \App\Models\Divisi::where('is_active', true)->get();
+
         return view('user.profile.edit', [
             'user' => $request->user(),
+            'divisis' => $divisis,
         ]);
     }
 

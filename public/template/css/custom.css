@@ -1,0 +1,81 @@
+/* 
+ * Custom CSS for KPPN Yogyakarta App
+ * Add your custom styles here to override SB Admin 2 defaults
+ */
+
+/* From welcome.blade.php */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+
+/* Shared Utilities */
+.form-label {
+    color: #6c757d;
+}
+
+.card {
+    border: none;
+    border-radius: 8px;
+}
+
+/* Breadcrumbs */
+.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin-bottom: 0;
+}
+
+.breadcrumb-item+.breadcrumb-item::before {
+    content: "/" !important;
+    color: #6c757d;
+}
+
+/* Table Enhancements */
+.table-hover tbody tr:hover {
+    background-color: #f8f9ff !important;
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 14px;
+    }
+
+    .table-responsive .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .table-responsive th,
+    .table-responsive td {
+        padding: 10px 8px !important;
+    }
+}
+
+/* Button Hover Effects */
+.btn-hover-effect:hover {
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+}
+
+/* Specific Button Colors (if not using Bootstrap classes) */
+.btn-success-custom {
+    background-color: #28a745;
+    border: none;
+    color: white;
+}
+
+.btn-success-custom:hover {
+    background-color: #218838;
+}
+
+.btn-secondary-custom {
+    background-color: #6c757d;
+    border: none;
+    color: white;
+}
+
+.btn-secondary-custom:hover {
+    background-color: #5a6268;
+}
